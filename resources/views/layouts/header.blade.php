@@ -1,7 +1,7 @@
  <header>
    <nav class="navbar navbar-expand navbar-light navbar-top">
      <div class="container-fluid">
-       <a href="#" class="burger-btn d-block">
+       <a href="javascript:void(0);" class="burger-btn d-block">
          <i class="bi bi-justify fs-3"></i>
        </a>
 
@@ -11,7 +11,7 @@
        </button>
        <div class="collapse navbar-collapse" id="navbarSupportedContent">
          <div class="dropdown ms-auto">
-           <a href="#" data-bs-toggle="dropdown" aria-expanded="false">
+           <a href="javascript:void(0)" data-bs-toggle="dropdown" aria-expanded="false">
              <div class="user-menu d-flex">
                <div class="user-name text-end me-3">
                  <h6 class="mb-0 text-gray-600">John Ducky</h6>
@@ -19,7 +19,7 @@
                </div>
                <div class="user-img d-flex align-items-center">
                  <div class="avatar avatar-md">
-                   <img src="./assets/compiled/jpg/1.jpg">
+                   <img src="https://ui-avatars.com/api/?name=John+Ducky">
                  </div>
                </div>
              </div>

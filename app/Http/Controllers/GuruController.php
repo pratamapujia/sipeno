@@ -33,14 +33,14 @@ class GuruController extends Controller
     public function store(Request $request)
     {
         $validasi = Validator::make($request->all(), [
-            'nip' => 'required|unique:teachers,nip',
-            'nama_guru' => 'required',
+            'nip' => 'unique:teachers,nip',
+            'nama_guru' => 'required|min:3',
             'jenis_kelamin' => 'required',
             'status' => 'required',
         ], [
-            'nip.required' => 'NIP harus diisi',
             'nip.unique' => 'NIP sudah terdaftar',
             'nama_guru.required' => 'Nama Guru harus diisi',
+            'nama_guru.min' => 'Nama Guru minimal 3 karakter',
             'jenis_kelamin.required' => 'Pilih salah satu',
             'status.required' => 'Pilih status guru',
         ]);
@@ -50,7 +50,7 @@ class GuruController extends Controller
         }
 
         Guru::create($request->all());
-        return redirect()->route('guru.index')->with('success', 'Data Guru ' . $request->nama_guru . ' berhasil disimpan');
+        return redirect()->route('admin.m.guru.index')->with('success', 'Data Guru ' . $request->nama_guru . ' berhasil disimpan');
     }
 
     /**
@@ -82,14 +82,14 @@ class GuruController extends Controller
     public function update(Request $request, string $id)
     {
         $validasi = Validator::make($request->all(), [
-            'nip' => 'required|unique:teachers,nip,' . $id,
-            'nama_guru' => 'required',
+            'nip' => 'unique:teachers,nip,' . $id,
+            'nama_guru' => 'required|min:3',
             'jenis_kelamin' => 'required',
             'status' => 'required',
         ], [
-            'nip.required' => 'NIP harus diisi',
             'nip.unique' => 'NIP sudah terdaftar',
             'nama_guru.required' => 'Nama Guru harus diisi',
+            'nama_guru.min' => 'Nama Guru minimal 3 karakter',
             'jenis_kelamin.required' => 'Pilih salah satu',
             'status.required' => 'Pilih status guru',
         ]);
@@ -100,7 +100,7 @@ class GuruController extends Controller
 
         $guru = Guru::findOrFail($id);
         $guru->update($request->all());
-        return redirect()->route('guru.index')->with('success', 'Data Guru ' . $guru->nama_guru . ' berhasil diperbarui');
+        return redirect()->route('admin.m.guru.index')->with('success', 'Data Guru ' . $guru->nama_guru . ' berhasil diperbarui');
     }
 
     /**
@@ -110,6 +110,6 @@ class GuruController extends Controller
     {
         $guru = Guru::findOrFail($id);
         $guru->delete();
-        return redirect()->route('guru.index')->with('success', 'Data Guru ' . $guru->nama_guru . ' berhasil dihapus');
+        return redirect()->route('admin.m.guru.index')->with('success', 'Data Guru ' . $guru->nama_guru . ' berhasil dihapus');
     }
 }

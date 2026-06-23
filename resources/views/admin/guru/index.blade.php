@@ -18,13 +18,14 @@
       <div class="row">
         <div class="col-12 col-md-6">
           <h3>Data Master Guru</h3>
+          <p class="text-subtitle text-muted">Kelola data guru di sekolah.</p>
         </div>
       </div>
     </div>
     <section class="section">
       <div class="card">
         <div class="card-header">
-          <a href="{{ route('guru.create') }}" class="btn icon icon-left btn-primary">
+          <a href="{{ route('admin.m.guru.create') }}" class="btn icon icon-left btn-primary">
             <i class="fas fa-plus"></i> Tambah Data
           </a>
         </div>
@@ -44,17 +45,17 @@
               @foreach ($guru as $data)
                 <tr>
                   <td>{{ $loop->iteration }}</td>
-                  <td>{{ $data->nip }}</td>
+                  <td>{{ $data->nip == null ? '-' : $data->nip }}</td>
                   <td>{{ $data->nama_guru }}</td>
                   <td>{{ $data->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan' }}</td>
                   <td>
                     <span class="badge {{ $data->status == 'Tetap' ? 'bg-primary' : 'bg-info' }}">{{ $data->status }}</span>
                   </td>
                   <td>
-                    <a href="{{ route('guru.edit', Hashids::encode($data->id)) }}" class="btn icon icon-left btn-sm btn-warning">
+                    <a href="{{ route('admin.m.guru.edit', Hashids::encode($data->id)) }}" class="btn icon icon-left btn-sm btn-warning">
                       <i class="fas fa-edit"></i> Edit
                     </a>
-                    <form action="{{ route('guru.destroy', $data->id) }}" method="POST" class="d-inline">
+                    <form action="{{ route('admin.m.guru.destroy', $data->id) }}" method="POST" class="d-inline">
                       @csrf
                       @method('DELETE')
                       <button type="button" class="btn icon icon-left btn-danger btn-sm btn-hapus" data-nama="Guru {{ $data->nama_guru }}">

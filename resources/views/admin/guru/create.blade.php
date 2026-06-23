@@ -15,7 +15,7 @@
           <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
             <ol class="breadcrumb">
               <li class="breadcrumb-item">
-                <a href="{{ route('guru.index') }}">Master Guru</a>
+                <a href="{{ route('admin.m.guru.index') }}">Master Guru</a>
               </li>
               <li class="breadcrumb-item active" aria-current="page">
                 Form Tambah Guru
@@ -27,7 +27,7 @@
     </div>
   </div>
   <div class="page-content">
-    <div class="flash-data" data-gagal="{{ Session::get('gagal') }}"></div>
+    <div class="flash-data" data-gagal="{{ Session::get('error') }}"></div>
     <div class="card">
       <div class="card-header">
         <div class="media d-flex align-items-center">
@@ -35,20 +35,20 @@
             <h5>Data Guru</h5>
           </div>
           <div class="ms-auto">
-            <a href="{{ route('guru.index') }}" class="btn icon icon-left btn-primary">
+            <a href="{{ route('admin.m.guru.index') }}" class="btn icon icon-left btn-primary">
               <i class="fas fa-arrow-left"></i> Kembali
             </a>
           </div>
         </div>
       </div>
       <div class="card-body">
-        <form action="{{ route('guru.store') }}" class="form" method="POST">
+        <form action="{{ route('admin.m.guru.store') }}" class="form" method="POST">
           @csrf
           <div class="row">
             <div class="col-sm-12 col-md-6">
               <div class="form-group">
-                <label class="form-label" for="nip">NIP</label>
-                <input type="text" class="form-control @error('nip') is-invalid @enderror" name="nip" placeholder="Masukkan NIP" value="{{ old('nip') }}">
+                <label class="form-label" for="nip">NIP (Optional)</label>
+                <input type="number" class="form-control @error('nip') is-invalid @enderror" name="nip" placeholder="Masukkan NIP" value="{{ old('nip') }}">
                 @error('nip')
                   <div class="invalid-feedback">
                     {{ $message }}

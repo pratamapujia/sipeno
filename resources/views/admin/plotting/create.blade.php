@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('title')
-  <title>Form Edit Guru</title>
+  <title>Form Tambah Plotting</title>
 @endsection
 
 @section('main')
@@ -9,16 +9,16 @@
     <div class="page-title">
       <div class="row">
         <div class="col-12 col-md-6 order-md-1 order-last">
-          <h3>Form Edit Guru</h3>
+          <h3>Form Tambah Plotting</h3>
         </div>
         <div class="col-12 col-md-6 order-md-2 order-first">
           <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
             <ol class="breadcrumb">
               <li class="breadcrumb-item">
-                <a href="{{ route('admin.m.guru.index') }}">Master Guru</a>
+                <a href="{{ route('admin.plotting.index') }}">Plotting</a>
               </li>
               <li class="breadcrumb-item active" aria-current="page">
-                Form Edit Guru
+                Form Tambah Plotting
               </li>
             </ol>
           </nav>
@@ -32,66 +32,68 @@
       <div class="card-header">
         <div class="media d-flex align-items-center">
           <div class="me-3">
-            <h5>Data Guru</h5>
+            <h5>Data Plotting</h5>
           </div>
           <div class="ms-auto">
-            <a href="{{ route('admin.m.guru.index') }}" class="btn icon icon-left btn-primary">
+            <a href="{{ route('admin.plotting.index') }}" class="btn icon icon-left btn-primary">
               <i class="fas fa-arrow-left"></i> Kembali
             </a>
           </div>
         </div>
       </div>
       <div class="card-body">
-        <form action="{{ route('admin.m.guru.update', $guru->id) }}" class="form" method="POST">
+        <form action="{{ route('admin.plotting.store') }}" class="form" method="POST">
           @csrf
-          @method('PUT')
+          <input type="hidden" name="tahun_ajaran_id" value="{{ $thnAjaran->id }}">
           <div class="row">
-            <div class="col-sm-12 col-md-6">
+            <div class="col-sm-12 col-md-4">
               <div class="form-group">
-                <label class="form-label" for="nip">NIP (Optional)</label>
-                <input type="number" class="form-control @error('nip') is-invalid @enderror" name="nip" placeholder="Masukkan NIP" value="{{ old('nip', $guru->nip) }}">
-                @error('nip')
-                  <div class="invalid-feedback">
-                    {{ $message }}
-                  </div>
-                @enderror
-              </div>
-            </div>
-            <div class="col-sm-12 col-md-6">
-              <div class="form-group">
-                <label class="form-label" for="nama_guru">Nama Guru</label>
-                <input type="text" class="form-control @error('nama_guru') is-invalid @enderror" name="nama_guru" placeholder="Masukkan Nama" value="{{ old('nama_guru', $guru->nama_guru) }}">
-                @error('nama_guru')
-                  <div class="invalid-feedback">
-                    {{ $message }}
-                  </div>
-                @enderror
-              </div>
-            </div>
-            <div class="col-sm-12 col-md-6">
-              <div class="form-group">
-                <label class="form-label" for="jenis_kelamin">Jenis Kelamin</label>
-                <select name="jenis_kelamin" id="jenis_kelamin" class="form-select @error('jenis_kelamin') is-invalid @enderror">
-                  <option value="">Pilih</option>
-                  <option value="L" {{ old('jenis_kelamin', $guru->jenis_kelamin) == 'L' ? 'selected' : '' }}>Laki Laki</option>
-                  <option value="P" {{ old('jenis_kelamin', $guru->jenis_kelamin) == 'P' ? 'selected' : '' }}>Perempuan</option>s
+                <label class="form-label" for="guru_id">Plih Nama Guru</label>
+                <select name="guru_id" id="guru_id" class="form-select @error('guru_id') is-invalid @enderror">
+                  <option value="">-- Pilih Guru --</option>
+                  @foreach ($guru as $item)
+                    <option value="{{ $item->id }}" {{ old('guru_id') == $item->id ? 'selected' : '' }}>
+                      {{ $item->nama_guru }} | {{ $item->nip ? '(' . $item->nip . ')' : '' }}
+                    </option>
+                  @endforeach
                 </select>
-                @error('jenis_kelamin')
+                @error('guru_id')
                   <div class="invalid-feedback">
                     {{ $message }}
                   </div>
                 @enderror
               </div>
             </div>
-            <div class="col-sm-12 col-md-6">
+            <div class="col-sm-12 col-md-4">
               <div class="form-group">
-                <label class="form-label" for="status">Status Guru</label>
-                <select name="status" id="status" class="form-select @error('status') is-invalid @enderror">
-                  <option value="">Pilih</option>
-                  <option value="Tetap" {{ old('status', $guru->status) == 'Tetap' ? 'selected' : '' }}>Tetap</option>
-                  <option value="Honorer" {{ old('status', $guru->status) == 'Honorer' ? 'selected' : '' }}>Honorer</option>s
+                <label class="form-label" for="mapel_id">Plih Mata Pelajaran</label>
+                <select name="mapel_id" id="mapel_id" class="form-select @error('mapel_id') is-invalid @enderror">
+                  <option value="">-- Pilih Mapel --</option>
+                  @foreach ($mapel as $item)
+                    <option value="{{ $item->id }}" {{ old('mapel_id') == $item->id ? 'selected' : '' }}>
+                      {{ $item->nama_mapel }} | {{ $item->kode_mapel ? '(' . $item->kode_mapel . ')' : '' }}
+                    </option>
+                  @endforeach
                 </select>
-                @error('status')
+                @error('mapel_id')
+                  <div class="invalid-feedback">
+                    {{ $message }}
+                  </div>
+                @enderror
+              </div>
+            </div>
+            <div class="col-sm-12 col-md-4">
+              <div class="form-group">
+                <label class="form-label" for="kelas_id">Plih Kelas</label>
+                <select name="kelas_id" id="kelas_id" class="form-select @error('kelas_id') is-invalid @enderror">
+                  <option value="">-- Pilih Kelas --</option>
+                  @foreach ($kelas as $item)
+                    <option value="{{ $item->id }}" {{ old('kelas_id') == $item->id ? 'selected' : '' }}>
+                      Kelas {{ $item->kelas }}
+                    </option>
+                  @endforeach
+                </select>
+                @error('kelas_id')
                   <div class="invalid-feedback">
                     {{ $message }}
                   </div>

@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('title')
-  <title>Form Edit Mapel</title>
+  <title>Form Tambah Tahun Ajaran</title>
 @endsection
 
 @section('main')
@@ -9,16 +9,16 @@
     <div class="page-title">
       <div class="row">
         <div class="col-12 col-md-6 order-md-1 order-last">
-          <h3>Form Edit Mapel</h3>
+          <h3>Form Tambah Tahun Ajaran</h3>
         </div>
         <div class="col-12 col-md-6 order-md-2 order-first">
           <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
             <ol class="breadcrumb">
               <li class="breadcrumb-item">
-                <a href="{{ route('admin.m.mapel.index') }}">Master Mapel</a>
+                <a href="{{ route('admin.m.thnAjaran.index') }}">Master Tahun Ajaran</a>
               </li>
               <li class="breadcrumb-item active" aria-current="page">
-                Form Edit Mapel
+                Form Tambah Tahun Ajaran
               </li>
             </ol>
           </nav>
@@ -32,49 +32,39 @@
       <div class="card-header">
         <div class="media d-flex align-items-center">
           <div class="me-3">
-            <h5>Data Mapel</h5>
+            <h5>Data Tahun Ajaran</h5>
           </div>
           <div class="ms-auto">
-            <a href="{{ route('admin.m.mapel.index') }}" class="btn icon icon-left btn-primary">
+            <a href="{{ route('admin.m.thnAjaran.index') }}" class="btn icon icon-left btn-primary">
               <i class="fas fa-arrow-left"></i> Kembali
             </a>
           </div>
         </div>
       </div>
       <div class="card-body">
-        <form action="{{ route('admin.m.mapel.update', $mapel->id) }}" class="form" method="POST">
+        <form action="{{ route('admin.m.thnAjaran.store') }}" class="form" method="POST">
           @csrf
-          @method('PUT')
           <div class="row">
-            <div class="col-sm-12 col-md-4">
+            <div class="col-sm-12 col-md-6">
               <div class="form-group">
-                <label class="form-label" for="nama_mapel">Nama Mapel</label>
-                <input type="text" class="form-control @error('nama_mapel') is-invalid @enderror" name="nama_mapel" placeholder="Masukkan Nama Mapel"
-                  value="{{ old('nama_mapel', $mapel->nama_mapel) }}">
-                @error('nama_mapel')
+                <label class="form-label" for="tahun_ajaran">Tahun Ajaran</label>
+                <input type="text" class="form-control @error('tahun_ajaran') is-invalid @enderror" name="tahun_ajaran" placeholder="Contoh: 2022/2023" value="{{ old('tahun_ajaran') }}">
+                @error('tahun_ajaran')
                   <div class="invalid-feedback">
                     {{ $message }}
                   </div>
                 @enderror
               </div>
             </div>
-            <div class="col-sm-12 col-md-4">
+            <div class="col-sm-12 col-md-6">
               <div class="form-group">
-                <label class="form-label" for="kode_mapel">Kode Mapel</label>
-                <input type="text" class="form-control @error('kode_mapel') is-invalid @enderror" name="kode_mapel" placeholder="Masukkan Kode Mapel"
-                  value="{{ old('kode_mapel', $mapel->kode_mapel) }}">
-                @error('kode_mapel')
-                  <div class="invalid-feedback">
-                    {{ $message }}
-                  </div>
-                @enderror
-              </div>
-            </div>
-            <div class="col-sm-12 col-md-4">
-              <div class="form-group">
-                <label class="form-label" for="beban_jam">Beban Jam</label>
-                <input type="number" class="form-control @error('beban_jam') is-invalid @enderror" name="beban_jam" placeholder="Masukkan Beban Jam" value="{{ old('beban_jam', $mapel->beban_jam) }}">
-                @error('beban_jam')
+                <label class="form-label" for="semester">Semester</label>
+                <select name="semester" id="semester" class="form-select @error('semester') is-invalid @enderror">
+                  <option value="">Pilih</option>
+                  <option value="Ganjil" {{ old('semester') == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                  <option value="Genap" {{ old('semester') == 'Genap' ? 'selected' : '' }}>Genap</option>
+                </select>
+                @error('semester')
                   <div class="invalid-feedback">
                     {{ $message }}
                   </div>

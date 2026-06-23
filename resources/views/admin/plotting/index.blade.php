@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('title')
-  <title>Data Master Mata Pelajaran</title>
+  <title>Plotting</title>
 
   {{-- Datatable CSS --}}
   <link rel="stylesheet" href="{{ asset('assets/extensions/simple-datatables/style.css') }}">
@@ -16,16 +16,26 @@
   <div class="page-heading">
     <div class="page-title">
       <div class="row">
-        <div class="col-12 col-md-6">
-          <h3>Data Master Mata Pelajaran</h3>
-          <p class="text-subtitle text-muted">Kelola data mata pelajaran di sekolah.</p>
+        <div class="col-12">
+          <h3>Plotting Guru Tahun {{ $thnAktif->tahun_ajaran }} Semester: {{ $thnAktif->semester }}</h3>
+          <p class="text-subtitle text-muted">plotting guru yang mengajar di setiap kelas dan mata pelajaran.</p>
         </div>
       </div>
     </div>
     <section class="section">
+      @if (!$thnAktif)
+        <div class="alert alert-light-warning alert-dismissible show fade">
+          <i class="fas fa-exclamation-triangle"></i>
+          Tahun ajaran aktif belum diatur! Silakan
+          <a href="{{ route('admin.m.thnAjaran.index') }}" class="alert-link">
+            <u>aktifkan Tahun Ajaran di sini</u>
+          </a>
+          terlebih dahulu sebelum mengelola plotting guru.
+        </div>
+      @endif
       <div class="card">
         <div class="card-header">
-          <a href="{{ route('admin.m.mapel.create') }}" class="btn icon icon-left btn-primary">
+          <a href="{{ route('admin.plotting.create') }}" class="btn icon icon-left btn-primary">
             <i class="fas fa-plus"></i> Tambah Data
           </a>
         </div>
@@ -34,27 +44,26 @@
             <thead>
               <tr>
                 <th>No</th>
-                <th>Kode Mapel</th>
-                <th>Nama Mapel</th>
+                <th>Nama Guru</th>
+                <th>Mata Pelajaran</th>
                 <th>Beban Jam</th>
+                <th>Kelas Target</th>
                 <th data-sortable="false">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              @foreach ($mapel as $data)
+              @foreach ($plotting as $index => $item)
                 <tr>
                   <td>{{ $loop->iteration }}</td>
-                  <td>{{ $data->kode_mapel }}</td>
-                  <td>{{ $data->nama_mapel }}</td>
-                  <td>{{ $data->beban_jam }}</td>
+                  <td>{{ $item->guru->nama_guru ?? 'Guru Tidak Ditemukan' }}</td>
+                  <td>{{ $item->mapel->nama_mapel ?? '-' }}</td>
+                  <td>{{ $item->mapel->beban_jam ?? '0' }}</td>
+                  <td><span class="badge bg-primary">{{ $item->kelas->kelas ?? '-' }}</span></td>
                   <td>
-                    <a href="{{ route('admin.m.mapel.edit', Hashids::encode($data->id)) }}" class="btn icon icon-left btn-sm btn-warning">
-                      <i class="fas fa-edit"></i> Edit
-                    </a>
-                    <form action="{{ route('admin.m.mapel.destroy', $data->id) }}" method="POST" class="d-inline">
+                    <form action="{{ route('admin.plotting.destroy', $item->id) }}" method="POST" class="d-inline">
                       @csrf
                       @method('DELETE')
-                      <button type="button" class="btn icon icon-left btn-danger btn-sm btn-hapus" data-nama="Mapel {{ $data->nama_mapel }}">
+                      <button type="button" class="btn icon icon-left btn-danger btn-sm btn-hapus" data-nama="Plotting Guru {{ $item->guru->nama_guru }}">
                         <i class="fas fa-trash"></i> Hapus
                       </button>
                     </form>

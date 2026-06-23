@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('title')
-  <title>Data Master Mata Pelajaran</title>
+  <title>Data Master Ruangan</title>
 
   {{-- Datatable CSS --}}
   <link rel="stylesheet" href="{{ asset('assets/extensions/simple-datatables/style.css') }}">
@@ -17,15 +17,15 @@
     <div class="page-title">
       <div class="row">
         <div class="col-12 col-md-6">
-          <h3>Data Master Mata Pelajaran</h3>
-          <p class="text-subtitle text-muted">Kelola data mata pelajaran di sekolah.</p>
+          <h3>Data Master Ruangan</h3>
+          <p class="text-subtitle text-muted">Kelola data ruangan di sekolah.</p>
         </div>
       </div>
     </div>
     <section class="section">
       <div class="card">
         <div class="card-header">
-          <a href="{{ route('admin.m.mapel.create') }}" class="btn icon icon-left btn-primary">
+          <a href="{{ route('admin.m.ruangan.create') }}" class="btn icon icon-left btn-primary">
             <i class="fas fa-plus"></i> Tambah Data
           </a>
         </div>
@@ -34,27 +34,26 @@
             <thead>
               <tr>
                 <th>No</th>
-                <th>Kode Mapel</th>
-                <th>Nama Mapel</th>
-                <th>Beban Jam</th>
+                <th>Nama Ruangan</th>
+                <th>Keterangan</th>
                 <th data-sortable="false">Aksi</th>
               </tr>
             </thead>
             <tbody>
-              @foreach ($mapel as $data)
+              @foreach ($ruangan as $data)
                 <tr>
                   <td>{{ $loop->iteration }}</td>
-                  <td>{{ $data->kode_mapel }}</td>
-                  <td>{{ $data->nama_mapel }}</td>
-                  <td>{{ $data->beban_jam }}</td>
+                  <td>{{ $data->nama_ruangan }}</td>
+                  <td>{{ $data->keterangan == null ? '-' : $data->keterangan }}</td>
+                  </td>
                   <td>
-                    <a href="{{ route('admin.m.mapel.edit', Hashids::encode($data->id)) }}" class="btn icon icon-left btn-sm btn-warning">
+                    <a href="{{ route('admin.m.ruangan.edit', Hashids::encode($data->id)) }}" class="btn icon icon-left btn-sm btn-warning">
                       <i class="fas fa-edit"></i> Edit
                     </a>
-                    <form action="{{ route('admin.m.mapel.destroy', $data->id) }}" method="POST" class="d-inline">
+                    <form action="{{ route('admin.m.ruangan.destroy', $data->id) }}" method="POST" class="d-inline">
                       @csrf
                       @method('DELETE')
-                      <button type="button" class="btn icon icon-left btn-danger btn-sm btn-hapus" data-nama="Mapel {{ $data->nama_mapel }}">
+                      <button type="button" class="btn icon icon-left btn-danger btn-sm btn-hapus" data-nama="Ruangan {{ $data->nama_ruangan }}">
                         <i class="fas fa-trash"></i> Hapus
                       </button>
                     </form>

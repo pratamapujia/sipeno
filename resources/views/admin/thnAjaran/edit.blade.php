@@ -1,7 +1,7 @@
 @extends('layouts.main')
 
 @section('title')
-  <title>Form Edit Guru</title>
+  <title>Form Edit Tahun Ajaran</title>
 @endsection
 
 @section('main')
@@ -9,16 +9,16 @@
     <div class="page-title">
       <div class="row">
         <div class="col-12 col-md-6 order-md-1 order-last">
-          <h3>Form Edit Guru</h3>
+          <h3>Form Edit Tahun Ajaran</h3>
         </div>
         <div class="col-12 col-md-6 order-md-2 order-first">
           <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
             <ol class="breadcrumb">
               <li class="breadcrumb-item">
-                <a href="{{ route('admin.m.guru.index') }}">Master Guru</a>
+                <a href="{{ route('admin.m.thnAjaran.index') }}">Master Tahun Ajaran</a>
               </li>
               <li class="breadcrumb-item active" aria-current="page">
-                Form Edit Guru
+                Form Edit Tahun Ajaran
               </li>
             </ol>
           </nav>
@@ -32,25 +32,26 @@
       <div class="card-header">
         <div class="media d-flex align-items-center">
           <div class="me-3">
-            <h5>Data Guru</h5>
+            <h5>Data Tahun Ajaran</h5>
           </div>
           <div class="ms-auto">
-            <a href="{{ route('admin.m.guru.index') }}" class="btn icon icon-left btn-primary">
+            <a href="{{ route('admin.m.thnAjaran.index') }}" class="btn icon icon-left btn-primary">
               <i class="fas fa-arrow-left"></i> Kembali
             </a>
           </div>
         </div>
       </div>
       <div class="card-body">
-        <form action="{{ route('admin.m.guru.update', $guru->id) }}" class="form" method="POST">
+        <form action="{{ route('admin.m.thnAjaran.update', $thnAjaran->id) }}" class="form" method="POST">
           @csrf
           @method('PUT')
           <div class="row">
             <div class="col-sm-12 col-md-6">
               <div class="form-group">
-                <label class="form-label" for="nip">NIP (Optional)</label>
-                <input type="number" class="form-control @error('nip') is-invalid @enderror" name="nip" placeholder="Masukkan NIP" value="{{ old('nip', $guru->nip) }}">
-                @error('nip')
+                <label class="form-label" for="tahun_ajaran">Tahun Ajaran</label>
+                <input type="text" class="form-control @error('tahun_ajaran') is-invalid @enderror" name="tahun_ajaran" placeholder="Contoh: 2022/2023"
+                  value="{{ old('tahun_ajaran', $thnAjaran->tahun_ajaran) }}">
+                @error('tahun_ajaran')
                   <div class="invalid-feedback">
                     {{ $message }}
                   </div>
@@ -59,24 +60,13 @@
             </div>
             <div class="col-sm-12 col-md-6">
               <div class="form-group">
-                <label class="form-label" for="nama_guru">Nama Guru</label>
-                <input type="text" class="form-control @error('nama_guru') is-invalid @enderror" name="nama_guru" placeholder="Masukkan Nama" value="{{ old('nama_guru', $guru->nama_guru) }}">
-                @error('nama_guru')
-                  <div class="invalid-feedback">
-                    {{ $message }}
-                  </div>
-                @enderror
-              </div>
-            </div>
-            <div class="col-sm-12 col-md-6">
-              <div class="form-group">
-                <label class="form-label" for="jenis_kelamin">Jenis Kelamin</label>
-                <select name="jenis_kelamin" id="jenis_kelamin" class="form-select @error('jenis_kelamin') is-invalid @enderror">
+                <label class="form-label" for="semester">Semester</label>
+                <select name="semester" id="semester" class="form-select @error('semester') is-invalid @enderror">
                   <option value="">Pilih</option>
-                  <option value="L" {{ old('jenis_kelamin', $guru->jenis_kelamin) == 'L' ? 'selected' : '' }}>Laki Laki</option>
-                  <option value="P" {{ old('jenis_kelamin', $guru->jenis_kelamin) == 'P' ? 'selected' : '' }}>Perempuan</option>s
+                  <option value="Ganjil" {{ old('semester', $thnAjaran->semester) == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                  <option value="Genap" {{ old('semester', $thnAjaran->semester) == 'Genap' ? 'selected' : '' }}>Genap</option>
                 </select>
-                @error('jenis_kelamin')
+                @error('semester')
                   <div class="invalid-feedback">
                     {{ $message }}
                   </div>
@@ -85,13 +75,13 @@
             </div>
             <div class="col-sm-12 col-md-6">
               <div class="form-group">
-                <label class="form-label" for="status">Status Guru</label>
-                <select name="status" id="status" class="form-select @error('status') is-invalid @enderror">
+                <label class="form-label" for="is_active">Status</label>
+                <select name="is_active" id="is_active" class="form-select @error('is_active') is-invalid @enderror">
                   <option value="">Pilih</option>
-                  <option value="Tetap" {{ old('status', $guru->status) == 'Tetap' ? 'selected' : '' }}>Tetap</option>
-                  <option value="Honorer" {{ old('status', $guru->status) == 'Honorer' ? 'selected' : '' }}>Honorer</option>s
+                  <option value="0" {{ old('is_active') == '0' ? 'selected' : '' }}>Tidak Aktif</option>
+                  <option value="1" {{ old('is_active') == '1' ? 'selected' : '' }}>Aktif</option>
                 </select>
-                @error('status')
+                @error('is_active')
                   <div class="invalid-feedback">
                     {{ $message }}
                   </div>

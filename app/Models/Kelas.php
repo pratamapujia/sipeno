@@ -6,11 +6,14 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 #[Fillable(['kelas', 'tingkat'])]
 #[Table('classes', key: 'id')]
 class Kelas extends Model
 {
+    use SoftDeletes;
+
     public function guruMapel(): HasMany
     {
         return $this->hasMany(GuruMapel::class);
