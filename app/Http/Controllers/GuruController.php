@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\GuruImport;
 use App\Models\Guru;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException;
 use Vinkla\Hashids\Facades\Hashids;
 
 class GuruController extends Controller
@@ -111,5 +113,40 @@ class GuruController extends Controller
         $guru = Guru::findOrFail($id);
         $guru->delete();
         return redirect()->route('admin.m.guru.index')->with('success', 'Data Guru ' . $guru->nama_guru . ' berhasil dihapus');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xls,xlsx',
+        ]);
+
+        try {
+            Excel::import(new GuruImport, $request->file('file_excel'));
+            return redirect()->route('admin.m.guru.index')->with('success', 'Data Guru berhasil di-Import');
+        } catch (ValidationException $e) {
+            $failures = $e->failures();
+            $errorMessages = [];
+            foreach ($failures as $failure) {
+                $errorMessages[] = 'Baris ke-<b>' . $failure->row() . '</b>: ' . implode(', ', $failure->errors());
+            }
+
+            $pesanGagal = [
+                'type' => 'danger',
+                'title' => 'Gagal Mengimport Data Guru',
+                'body' => 'Terdapat beberapa kesalahan pada file Anda:',
+                'details' => $errorMessages,
+            ];
+
+            return redirect()->route('admin.m.guru.index')->with('pesan_error', $pesanGagal);
+        } catch (\Exception $e) {
+            $pesanGagal = [
+                'type' => 'danger',
+                'title' => 'Terjadi Kesalahan!',
+                'body' => 'Tidak dapat memproses file: ' . $e->getMessage()
+            ];
+
+            return redirect()->route('admin.m.guru.index')->with('pesan_error', $pesanGagal);
+        }
     }
 }

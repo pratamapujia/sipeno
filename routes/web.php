@@ -18,14 +18,18 @@ Route::prefix('admin/m')->name('admin.m.')->group(function () {
     Route::resource('guru', GuruController::class);
     Route::resource('mapel', MapelController::class);
     Route::resource('kelas', KelasController::class);
-    // Route::resource('ruangan', RuanganController::class);
     Route::resource('thnAjaran', TahunAjaranController::class);
     Route::resource('slotJam', SlotJamController::class);
+    // Route::resource('ruangan', RuanganController::class);
+    // Import Route
+    Route::post('guru/import', [GuruController::class, 'import'])->name('guru.import');
+    Route::post('mapel/import', [MapelController::class, 'import'])->name('mapel.import');
+    Route::post('kelas/import', [KelasController::class, 'import'])->name('kelas.import');
 });
 
 Route::prefix('admin')->name('admin.')->group(function () {
     // Penjadwalan
-    Route::resource('plotting', GuruMapelController::class)->except(['show', 'edit', 'update']);
+    Route::resource('plotting', GuruMapelController::class)->except(['show']);
     Route::get('guruFree', [GuruFreeController::class, 'index'])->name('guruFree.index');
     Route::get('guruFree/rekap', [GuruFreeController::class, 'rekap'])->name('guruFree.rekap');
     Route::post('guruFree', [GuruFreeController::class, 'store'])->name('guruFree.store');

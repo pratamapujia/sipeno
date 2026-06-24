@@ -45,7 +45,7 @@
         <form action="{{ route('admin.m.mapel.store') }}" class="form" method="POST">
           @csrf
           <div class="row">
-            <div class="col-sm-12 col-md-4">
+            <div class="col-sm-12 col-md-6">
               <div class="form-group">
                 <label class="form-label" for="nama_mapel">Nama Mapel</label>
                 <input type="text" class="form-control @error('nama_mapel') is-invalid @enderror" name="nama_mapel" placeholder="Masukkan Nama Mapel" value="{{ old('nama_mapel') }}">
@@ -56,18 +56,7 @@
                 @enderror
               </div>
             </div>
-            <div class="col-sm-12 col-md-4">
-              <div class="form-group">
-                <label class="form-label" for="kode_mapel">Kode Mapel</label>
-                <input type="text" class="form-control @error('kode_mapel') is-invalid @enderror" name="kode_mapel" placeholder="Masukkan Kode Mapel" value="{{ old('kode_mapel') }}">
-                @error('kode_mapel')
-                  <div class="invalid-feedback">
-                    {{ $message }}
-                  </div>
-                @enderror
-              </div>
-            </div>
-            <div class="col-sm-12 col-md-4">
+            <div class="col-sm-12 col-md-6">
               <div class="form-group">
                 <label class="form-label" for="beban_jam">Beban Jam</label>
                 <input type="number" class="form-control @error('beban_jam') is-invalid @enderror" name="beban_jam" placeholder="Masukkan Beban Jam" value="{{ old('beban_jam') }}">
@@ -76,6 +65,12 @@
                     {{ $message }}
                   </div>
                 @enderror
+              </div>
+            </div>
+            <div class="col-12 mt-3 mb-4">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="type" name="type" value="praktikum">
+                <label class="form-check-label" for="type">Tandai sebagai Jam Praktikum</label>
               </div>
             </div>
             <div class="col-12">

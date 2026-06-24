@@ -53,11 +53,11 @@
 
     <div class="header-kop">
       <h2>JADWAL MATA PELAJARAN</h2>
-      <h4>Tahun Ajaran: {{ $batch->academicYear->tahun_ajaran ?? '...' }} Semester: {{ $batch->academicYear->semester ?? '...' }}</h4>
+      <h4>Tahun Ajaran: {{ $academicYears->tahun_ajaran ?? '...' }} Semester: {{ $academicYears->semester ?? '...' }}</h4>
     </div>
 
     <div class="mb-3 d-flex justify-content-between align-items-end">
-      <h5 class="mb-0">Kelas: <b>{{ $kelas->kelas }}</b></h5>
+      <h5 class="mb-0">Kelas: <b>{{ $kelas->nama_kelas }}</b></h5>
       <small class="text-muted">Kode Simulasi: {{ $batch->nama }}</small>
     </div>
 

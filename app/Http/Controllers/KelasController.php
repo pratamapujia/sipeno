@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\KelasImport;
 use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException;
 use Vinkla\Hashids\Facades\Hashids;
 
 class KelasController extends Controller
@@ -32,12 +35,12 @@ class KelasController extends Controller
     public function store(Request $request)
     {
         $validasi = Validator::make($request->all(), [
-            'kelas' => 'required|min:3|unique:classes,kelas',
+            'nama_kelas' => 'required|min:3|unique:classes,nama_kelas',
             'tingkat' => 'required|numeric',
         ], [
-            'kelas.required' => 'Kelas harus diisi',
-            'kelas.min' => 'Kelas minimal 3 karakter',
-            'kelas.unique' => 'Kelas sudah ada',
+            'nama_kelas.required' => 'Kelas harus diisi',
+            'nama_kelas.min' => 'Kelas minimal 3 karakter',
+            'nama_kelas.unique' => 'Kelas sudah ada',
             'tingkat.required' => 'Tingkat harus diisi',
             'tingkat.numeric' => 'Tingkat harus angka',
         ]);
@@ -47,7 +50,7 @@ class KelasController extends Controller
         }
 
         Kelas::create($request->all());
-        return redirect()->route('admin.m.kelas.index')->with('success', 'Kelas ' . $request->kelas . ' berhasil ditambahkan');
+        return redirect()->route('admin.m.kelas.index')->with('success', 'Kelas ' . $request->nama_kelas . ' berhasil ditambahkan');
     }
 
     /**
@@ -79,12 +82,12 @@ class KelasController extends Controller
     public function update(Request $request, string $id)
     {
         $validasi = Validator::make($request->all(), [
-            'kelas' => 'required|min:3|unique:classes,kelas,' . $id,
+            'nama_kelas' => 'required|min:3|unique:classes,nama_kelas,' . $id,
             'tingkat' => 'required|numeric',
         ], [
-            'kelas.required' => 'Kelas harus diisi',
-            'kelas.min' => 'Kelas minimal 3 karakter',
-            'kelas.unique' => 'Kelas sudah ada',
+            'nama_kelas.required' => 'Kelas harus diisi',
+            'nama_kelas.min' => 'Kelas minimal 3 karakter',
+            'nama_kelas.unique' => 'Kelas sudah ada',
             'tingkat.required' => 'Tingkat harus diisi',
             'tingkat.numeric' => 'Tingkat harus angka',
         ]);
@@ -95,7 +98,7 @@ class KelasController extends Controller
 
         $kelas = Kelas::findOrFail($id);
         $kelas->update($request->all());
-        return redirect()->route('admin.m.kelas.index')->with('success', 'Kelas ' . $request->kelas . ' berhasil diubah');
+        return redirect()->route('admin.m.kelas.index')->with('success', 'Kelas ' . $request->nama_kelas . ' berhasil diubah');
     }
 
     /**
@@ -105,6 +108,41 @@ class KelasController extends Controller
     {
         $kelas = Kelas::findOrFail($id);
         $kelas->delete();
-        return redirect()->route('admin.m.kelas.index')->with('success', 'Kelas ' . $kelas->kelas . ' berhasil dihapus');
+        return redirect()->route('admin.m.kelas.index')->with('success', 'Kelas ' . $kelas->nama_kelas . ' berhasil dihapus');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xls,xlsx',
+        ]);
+
+        try {
+            Excel::import(new KelasImport, $request->file('file_excel'));
+            return redirect()->route('admin.m.kelas.index')->with('success', 'Data Kelas berhasil di-Import');
+        } catch (ValidationException $e) {
+            $failures = $e->failures();
+            $errorMessages = [];
+            foreach ($failures as $failure) {
+                $errorMessages[] = 'Baris ke-<b>' . $failure->row() . '</b>: ' . implode(', ', $failure->errors());
+            }
+
+            $pesanGagal = [
+                'type' => 'danger',
+                'title' => 'Gagal Mengimport Data Kelas',
+                'body' => 'Terdapat beberapa kesalahan pada file Anda:',
+                'details' => $errorMessages,
+            ];
+
+            return redirect()->route('admin.m.kelas.index')->with('pesan_error', $pesanGagal);
+        } catch (\Exception $e) {
+            $pesanGagal = [
+                'type' => 'danger',
+                'title' => 'Terjadi Kesalahan!',
+                'body' => 'Tidak dapat memproses file: ' . $e->getMessage()
+            ];
+
+            return redirect()->route('admin.m.kelas.index')->with('pesan_error', $pesanGagal);
+        }
     }
 }

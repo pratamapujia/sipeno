@@ -48,9 +48,9 @@
           <div class="row">
             <div class="col-sm-12 col-md-6">
               <div class="form-group">
-                <label class="form-label" for="kelas">Nama Kelas</label>
-                <input type="text" class="form-control @error('kelas') is-invalid @enderror" name="kelas" placeholder="Masukkan Nama Kelas" value="{{ old('kelas', $kelas->kelas) }}">
-                @error('kelas')
+                <label class="form-label" for="nama_kelas">Nama Kelas</label>
+                <input type="text" class="form-control @error('nama_kelas') is-invalid @enderror" name="nama_kelas" placeholder="Masukkan Nama Kelas" value="{{ old('kelas', $kelas->kelas) }}">
+                @error('nama_kelas')
                   <div class="invalid-feedback">
                     {{ $message }}
                   </div>

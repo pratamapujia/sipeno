@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['kelas', 'tingkat'])]
+#[Fillable(['nama_kelas', 'tingkat'])]
 #[Table('classes', key: 'id')]
 class Kelas extends Model
 {

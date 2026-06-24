@@ -58,8 +58,11 @@
                   <td>{{ $item->guru->nama_guru ?? 'Guru Tidak Ditemukan' }}</td>
                   <td>{{ $item->mapel->nama_mapel ?? '-' }}</td>
                   <td>{{ $item->mapel->beban_jam ?? '0' }}</td>
-                  <td><span class="badge bg-primary">{{ $item->kelas->kelas ?? '-' }}</span></td>
+                  <td><span class="badge bg-primary">{{ $item->kelas->nama_kelas ?? '-' }}</span></td>
                   <td>
+                    <a href="{{ route('admin.plotting.edit', Hashids::encode($item->id)) }}" class="btn icon icon-left btn-sm btn-warning me-1">
+                      <i class="fas fa-edit"></i> Edit
+                    </a>
                     <form action="{{ route('admin.plotting.destroy', $item->id) }}" method="POST" class="d-inline">
                       @csrf
                       @method('DELETE')

@@ -9,6 +9,7 @@ use App\Models\Mapel;
 use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Vinkla\Hashids\Facades\Hashids;
 
 class GuruMapelController extends Controller
 {
@@ -50,7 +51,7 @@ class GuruMapelController extends Controller
         // Ambil semua data dari tabel master untuk opsi dropdown
         $guru = Guru::orderBy('nama_guru', 'asc')->get();
         $mapel = Mapel::orderBy('nama_mapel', 'asc')->get();
-        $kelas = Kelas::orderBy('kelas', 'asc')->get();
+        $kelas = Kelas::orderBy('nama_kelas', 'asc')->get();
 
         return view('admin.plotting.create', compact('guru', 'thnAjaran', 'mapel', 'kelas'));
     }
@@ -61,40 +62,60 @@ class GuruMapelController extends Controller
     public function store(Request $request)
     {
         $validasi = Validator::make($request->all(), [
-            'guru_id' => 'required|exists:teachers,id',
             'tahun_ajaran_id' => 'required|exists:academic_years,id',
-            'kelas_id' => 'required|exists:classes,id',
-            'mapel_id' => 'required|exists:subjects,id',
+            'guru_id' => 'required|exists:teachers,id',
+            'mapel_id' => 'required|array',
+            'mapel_id.*' => 'exists:subjects,id',
+            'kelas_id' => 'required|array',
+            'kelas_id.*' => 'exists:classes,id',
         ], [
-            'guru_id.required' => 'Guru harus dipilih.',
-            'guru_id.exists' => 'Guru tidak ditemukan.',
             'tahun_ajaran_id.required' => 'Tahun Ajaran harus dipilih.',
             'tahun_ajaran_id.exists' => 'Tahun Ajaran tidak ditemukan.',
-            'kelas_id.required' => 'Kelas harus dipilih.',
-            'kelas_id.exists' => 'Kelas tidak ditemukan.',
+            'guru_id.required' => 'Guru harus dipilih.',
+            'guru_id.exists' => 'Guru tidak ditemukan.',
             'mapel_id.required' => 'Mapel harus dipilih.',
-            'mapel_id.exists' => 'Mapel tidak ditemukan.',
+            'mapel_id.*.exists' => 'Mapel tidak ditemukan.',
+            'kelas_id.required' => 'Kelas harus dipilih minimal 1 Kelas.',
+            'kelas_id.*.exists' => 'Kelas tidak ditemukan.',
         ]);
 
         if ($validasi->fails()) {
             return redirect()->back()->withErrors($validasi)->withInput();
         }
 
-        // PROTEKSI: Cek apakah kombinasi Guru, Mapel, dan Kelas ini sudah pernah diinput sebelumnya
-        $isExist = GuruMapel::where('guru_id', $request->guru_id)
-            ->where('mapel_id', $request->mapel_id)
-            ->where('kelas_id', $request->kelas_id)
-            ->where('tahun_ajaran_id', $request->tahun_ajaran_id)
-            ->exists();
+        $suksesCount = 0;
+        $gagalCount = 0;
 
-        if ($isExist) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Gagal! Guru tersebut sudah diplot mengampu mata pelajaran di kelas yang sama.');
+        foreach ($request->mapel_id as $mapelId) {
+            foreach ($request->kelas_id as $kelasId) {
+                $isDuplicate = GuruMapel::where([
+                    'tahun_ajaran_id' => $request->tahun_ajaran_id,
+                    'guru_id'         => $request->guru_id,
+                    'mapel_id'        => $mapelId,
+                    'kelas_id'        => $kelasId,
+                ])->exists();
+
+                if (!$isDuplicate) {
+                    GuruMapel::create([
+                        'tahun_ajaran_id' => $request->tahun_ajaran_id,
+                        'guru_id'         => $request->guru_id,
+                        'mapel_id'        => $mapelId,
+                        'kelas_id'        => $kelasId,
+                    ]);
+                    $suksesCount++;
+                } else {
+                    $gagalCount++;
+                }
+            }
         }
 
-        GuruMapel::create($request->all());
-        return redirect()->route('admin.plotting.index')->with('success', 'Plotting berhasil ditambahkan.');
+        if ($gagalCount > 0) {
+            $msg = "Berhasil mem-plot {$suksesCount} kombinasi. ({$gagalCount} kombinasi dilewati karena sudah ada).";
+        } else {
+            $msg = "Berhasil mem-plot {$suksesCount} kombinasi jadwal sekaligus.";
+        }
+
+        return redirect()->route('admin.plotting.index')->with('success', $msg);
     }
 
     /**
@@ -108,9 +129,17 @@ class GuruMapelController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(string $id)
+    public function edit(string $hashedId)
     {
-        //
+        $id = Hashids::decode($hashedId)[0] ?? null;
+        $plotting = GuruMapel::findOrFail($id);
+        $thnAktif = TahunAjaran::where('is_active', true)->first();
+
+        $guru = Guru::all();
+        $mapel = Mapel::all();
+        $kelas = Kelas::all();
+
+        return view('admin.plotting.edit', compact('plotting', 'thnAktif', 'guru', 'mapel', 'kelas'));
     }
 
     /**
@@ -118,7 +147,31 @@ class GuruMapelController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $request->validate([
+            'guru_id' => 'required|exists:teachers,id',
+            'mapel_id' => 'required|exists:subjects,id',
+            'kelas_id' => 'required|exists:classes,id',
+        ]);
+
+        $plotting = GuruMapel::findOrFail($id);
+        $isDuplicate = GuruMapel::where([
+            'tahun_ajaran_id' => $plotting->tahun_ajaran_id,
+            'guru_id' => $request->guru_id,
+            'mapel_id' => $request->mapel_id,
+            'kelas_id' => $request->kelas_id,
+        ])->where('id', '!=', $id)->exists();
+
+        if ($isDuplicate) {
+            return redirect()->route('admin.plotting.edit', $id)->with('error', 'Kelas tersebut sudah pernah di-plot sebelumnya.');
+        }
+
+        $plotting->update([
+            'guru_id' => $request->guru_id,
+            'mapel_id' => $request->mapel_id,
+            'kelas_id' => $request->kelas_id,
+        ]);
+
+        return redirect()->route('admin.plotting.index')->with('success', 'Berhasil memperbarui target mengajar Guru.');
     }
 
     /**
@@ -126,6 +179,8 @@ class GuruMapelController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $plotting = GuruMapel::findOrFail($id);
+        $plotting->delete();
+        return redirect()->route('admin.plotting.index')->with('success', 'Berhasil menghapus target mengajar Guru.');
     }
 }

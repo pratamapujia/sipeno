@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('users_id')->nullable()->constrained('users')->onDelete('set null');
             $table->string('nip')->unique()->nullable();
             $table->string('nama_guru');
-            $table->enum('jenis_kelamin',['L', 'P']);
+            $table->enum('jenis_kelamin', ['L', 'P']);
             $table->enum('status', ['Tetap', 'Honorer'])->default('Tetap');
             $table->timestamps();
         });
@@ -25,7 +25,6 @@ return new class extends Migration
         // 2. Subjects (Mata Pelajaran)
         Schema::create('subjects', function (Blueprint $table) {
             $table->id();
-            $table->string('kode_mapel')->unique();
             $table->string('nama_mapel');
             $table->integer('beban_jam'); // Jumlah jam per minggu
             $table->timestamps();
@@ -34,7 +33,7 @@ return new class extends Migration
         // 3. Classes (Kelas)
         Schema::create('classes', function (Blueprint $table) {
             $table->id();
-            $table->string('kelas')->unique();
+            $table->string('nama_kelas')->unique();
             $table->string('tingkat');
             $table->timestamps();
         });

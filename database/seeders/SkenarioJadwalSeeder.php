@@ -40,11 +40,11 @@ class SkenarioJadwalSeeder extends Seeder
         // 4. Buat 3 Mata Pelajaran dengan Beban Jam yang Masuk Akal (Misal: 2 JP)
         $m1 = Mapel::create(['kode_mapel' => 'MTK', 'nama_mapel' => 'Matematika', 'beban_jam' => 2]);
         $m2 = Mapel::create(['kode_mapel' => 'BI', 'nama_mapel' => 'Bahasa Inggris', 'beban_jam' => 2]);
-        $m3 = Mapel::create(['kode_mapel' => 'WEB',  'nama_mapel' => 'Pemrograman Web', 'beban_jam' => 2]);
+        $m3 = Mapel::create(['kode_mapel' => 'WEB',  'nama_mapel' => 'Pemrograman Web', 'type' => 'praktikum', 'beban_jam' => 2]);
 
         // 5. Buat 2 Data Kelas
-        $k1 = Kelas::create(['kelas' => 'X-RPL 1', 'tingkat' => '10']);
-        $k2 = Kelas::create(['kelas' => 'XI-RPL 1', 'tingkat' => '11']);
+        $k1 = Kelas::create(['nama_kelas' => '10 RPL', 'tingkat' => '10']);
+        $k2 = Kelas::create(['nama_kelas' => '11 RPL', 'tingkat' => '11']);
 
         // 6. Buat Plotting Target Mengajar yang Harmonis (Tidak Saling Berebutan Extreme)
         // Kelas X-RPL 1 diajar Matematika (Guru Budi) & Web (Guru Ahmad)

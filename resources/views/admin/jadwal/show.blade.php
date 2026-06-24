@@ -40,7 +40,7 @@
               <select name="kelas_id" id="kelas_id" class="form-select w-auto min-w-200" onchange="document.getElementById('form-filter').submit();">
                 @foreach ($kelasList as $kelas)
                   <option value="{{ $kelas->id }}" {{ $selectedKelasId == $kelas->id ? 'selected' : '' }}>
-                    {{ $kelas->kelas }}
+                    {{ $kelas->nama_kelas }}
                   </option>
                 @endforeach
               </select>

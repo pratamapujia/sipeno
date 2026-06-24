@@ -1,7 +1,8 @@
 @extends('layouts.main')
 
 @section('title')
-  <title>Form Tambah Plotting</title>
+  <title>Tambah Plotting Mengajar</title>
+  <link rel="stylesheet" href="{{ asset('assets/extensions/choices.js/public/assets/styles/choices.css') }}">
 @endsection
 
 @section('main')
@@ -9,114 +10,102 @@
     <div class="page-title">
       <div class="row">
         <div class="col-12 col-md-6 order-md-1 order-last">
-          <h3>Form Tambah Plotting</h3>
-        </div>
-        <div class="col-12 col-md-6 order-md-2 order-first">
-          <nav aria-label="breadcrumb" class="breadcrumb-header float-start float-lg-end">
-            <ol class="breadcrumb">
-              <li class="breadcrumb-item">
-                <a href="{{ route('admin.plotting.index') }}">Plotting</a>
-              </li>
-              <li class="breadcrumb-item active" aria-current="page">
-                Form Tambah Plotting
-              </li>
-            </ol>
-          </nav>
+          <h3>Tambah Target Mengajar</h3>
+          <p class="text-subtitle text-muted">Tahun Ajaran: {{ $thnAjaran->tahun_ajaran }} (Semester {{ ucfirst($thnAjaran->semester) }})</p>
         </div>
       </div>
     </div>
-  </div>
-  <div class="page-content">
-    <div class="flash-data" data-gagal="{{ Session::get('error') }}"></div>
-    <div class="card">
-      <div class="card-header">
-        <div class="media d-flex align-items-center">
-          <div class="me-3">
-            <h5>Data Plotting</h5>
-          </div>
-          <div class="ms-auto">
-            <a href="{{ route('admin.plotting.index') }}" class="btn icon icon-left btn-primary">
-              <i class="fas fa-arrow-left"></i> Kembali
-            </a>
+
+    <section class="section">
+      <div class="card">
+        <div class="card-content">
+          <div class="card-body">
+
+            @if (session('error'))
+              <div class="alert alert-danger alert-dismissible show fade">
+                <i class="fas fa-exclamation-triangle"></i> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            @endif
+
+            <form action="{{ route('admin.plotting.store') }}" method="POST" class="form form-vertical">
+              @csrf
+              <input type="hidden" name="tahun_ajaran_id" value="{{ $thnAjaran->id }}">
+              <div class="form-body">
+                <div class="row">
+                  <div class="col-12">
+                    <div class="form-group">
+                      <label for="guru_id" class="fw-bold mb-1">Pilih Guru</label>
+                      <select name="guru_id" id="guru_id" class="form-select @error('guru_id') is-invalid @enderror" required>
+                        <option value="">-- Pilih Guru --</option>
+                        @foreach ($guru as $guru)
+                          <option value="{{ $guru->id }}" {{ old('guru_id') == $guru->id ? 'selected' : '' }}>
+                            {{ $guru->nama_guru }} {{ $guru->nip ? '(' . $guru->nip . ')' : '' }}
+                          </option>
+                        @endforeach
+                      </select>
+                      @error('guru_id')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                      @enderror
+                    </div>
+                  </div>
+                  <div class="col-12 mt-2">
+                    <div class="form-group">
+                      <label for="mapel_id" class="fw-bold mb-1">Mata Pelajaran (Bisa pilih lebih dari satu)</label>
+
+                      <select name="mapel_id[]" id="mapel_id" class="choices form-select multiple-remove @error('mapel_id') is-invalid @enderror" multiple="multiple" required>
+                        <optgroup label="Daftar Mata Pelajaran">
+                          @foreach ($mapel as $m)
+                            <option value="{{ $m->id }}" {{ is_array(old('mapel_id')) && in_array($m->id, old('mapel_id')) ? 'selected' : '' }}>
+                              {{ $m->nama_mapel }} ({{ $m->beban_jam }} JP)
+                            </option>
+                          @endforeach
+                        </optgroup>
+                      </select>
+
+                      @error('mapel_id')
+                        <div class="invalid-feedback d-block">{{ $message }}</div>
+                      @enderror
+                    </div>
+                  </div>
+                  <div class="col-12 mt-3">
+                    <div class="form-group">
+                      <label class="fw-bold mb-2 d-block">Pilih Target Kelas (Bisa pilih lebih dari satu):</label>
+                      @error('kelas_id')
+                        <div class="text-danger small mb-2"><i class="fas fa-exclamation-circle"></i> {{ $message }}</div>
+                      @enderror
+                      <div class="p-3 border rounded">
+                        <div class="row">
+                          @foreach ($kelas as $k)
+                            <div class="col-md-3 col-sm-6 mb-2">
+                              <div class="form-check">
+                                <input class="form-check-input @error('kelas_id') is-invalid @enderror" type="checkbox" name="kelas_id[]" value="{{ $k->id }}" id="kelas_{{ $k->id }}"
+                                  {{ is_array(old('kelas_id')) && in_array($k->id, old('kelas_id')) ? 'checked' : '' }}>
+                                <label class="form-check-input-label fw-semibold text-dark" for="kelas_{{ $k->id }}" style="cursor:pointer;">
+                                  Kelas {{ $k->nama_kelas }}
+                                </label>
+                              </div>
+                            </div>
+                          @endforeach
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-12 d-flex justify-content-end mt-4">
+                    <a href="{{ route('admin.plotting.index') }}" class="btn btn-light-secondary me-1 mb-1">Kembali</a>
+                    <button type="submit" class="btn btn-primary me-1 mb-1">Simpan Plotting</button>
+                  </div>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       </div>
-      <div class="card-body">
-        <form action="{{ route('admin.plotting.store') }}" class="form" method="POST">
-          @csrf
-          <input type="hidden" name="tahun_ajaran_id" value="{{ $thnAjaran->id }}">
-          <div class="row">
-            <div class="col-sm-12 col-md-4">
-              <div class="form-group">
-                <label class="form-label" for="guru_id">Plih Nama Guru</label>
-                <select name="guru_id" id="guru_id" class="form-select @error('guru_id') is-invalid @enderror">
-                  <option value="">-- Pilih Guru --</option>
-                  @foreach ($guru as $item)
-                    <option value="{{ $item->id }}" {{ old('guru_id') == $item->id ? 'selected' : '' }}>
-                      {{ $item->nama_guru }} | {{ $item->nip ? '(' . $item->nip . ')' : '' }}
-                    </option>
-                  @endforeach
-                </select>
-                @error('guru_id')
-                  <div class="invalid-feedback">
-                    {{ $message }}
-                  </div>
-                @enderror
-              </div>
-            </div>
-            <div class="col-sm-12 col-md-4">
-              <div class="form-group">
-                <label class="form-label" for="mapel_id">Plih Mata Pelajaran</label>
-                <select name="mapel_id" id="mapel_id" class="form-select @error('mapel_id') is-invalid @enderror">
-                  <option value="">-- Pilih Mapel --</option>
-                  @foreach ($mapel as $item)
-                    <option value="{{ $item->id }}" {{ old('mapel_id') == $item->id ? 'selected' : '' }}>
-                      {{ $item->nama_mapel }} | {{ $item->kode_mapel ? '(' . $item->kode_mapel . ')' : '' }}
-                    </option>
-                  @endforeach
-                </select>
-                @error('mapel_id')
-                  <div class="invalid-feedback">
-                    {{ $message }}
-                  </div>
-                @enderror
-              </div>
-            </div>
-            <div class="col-sm-12 col-md-4">
-              <div class="form-group">
-                <label class="form-label" for="kelas_id">Plih Kelas</label>
-                <select name="kelas_id" id="kelas_id" class="form-select @error('kelas_id') is-invalid @enderror">
-                  <option value="">-- Pilih Kelas --</option>
-                  @foreach ($kelas as $item)
-                    <option value="{{ $item->id }}" {{ old('kelas_id') == $item->id ? 'selected' : '' }}>
-                      Kelas {{ $item->kelas }}
-                    </option>
-                  @endforeach
-                </select>
-                @error('kelas_id')
-                  <div class="invalid-feedback">
-                    {{ $message }}
-                  </div>
-                @enderror
-              </div>
-            </div>
-            <div class="col-12">
-              <div class="row">
-                <div class="col-6 mt-2">
-                  <button class="btn btn-primary icon icon-left btn-block">
-                    <i class="fas fa-save"></i> Simpan
-                  </button>
-                </div>
-                <div class="col-6 mt-2">
-                  <button type="reset" class="btn btn-secondary icon icon-left btn-block">
-                    <i class="fas fa-undo"></i> Reset
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </form>
-      </div>
-    </div>
+    </section>
   </div>
+@endsection
+
+@section('script')
+  <script src="{{ asset('assets/extensions/choices.js/public/assets/scripts/choices.js') }}"></script>
+  <script src="{{ asset('assets/static/js/pages/form-element-select.js') }}"></script>
 @endsection

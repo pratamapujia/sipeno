@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\MapelImport;
 use App\Models\Mapel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException;
 use Vinkla\Hashids\Facades\Hashids;
 
 class MapelController extends Controller
@@ -32,13 +35,9 @@ class MapelController extends Controller
     public function store(Request $request)
     {
         $validasi = Validator::make($request->all(), [
-            'kode_mapel' => 'required|min:2|unique:subjects,kode_mapel',
             'nama_mapel' => 'required|min:3',
             'beban_jam' => 'required|numeric',
         ], [
-            'kode_mapel.required' => 'Kode mapel harus diisi',
-            'kode_mapel.min' => 'Kode mapel minimal 2 karakter',
-            'kode_mapel.unique' => 'Kode mapel sudah ada',
             'nama_mapel.required' => 'Nama mapel harus diisi',
             'nama_mapel.min' => 'Nama mapel minimal 3 karakter',
             'beban_jam.required' => 'Beban jam harus diisi',
@@ -49,7 +48,11 @@ class MapelController extends Controller
             return redirect()->back()->withErrors($validasi)->withInput();
         }
 
-        Mapel::create($request->all());
+        Mapel::create([
+            'nama_mapel' => $request->nama_mapel,
+            'beban_jam' => $request->beban_jam,
+            'type' => $request->has('type') ? 'praktikum' : 'teori',
+        ]);
         return redirect()->route('admin.m.mapel.index')->with('success', 'Data Mata Pelajaran ' . $request->nama_mapel . ' berhasil disimpan');
     }
 
@@ -82,13 +85,9 @@ class MapelController extends Controller
     public function update(Request $request, string $id)
     {
         $validasi = Validator::make($request->all(), [
-            'kode_mapel' => 'required|min:2|unique:subjects,kode_mapel,' . $id,
             'nama_mapel' => 'required|min:3',
             'beban_jam' => 'required|numeric',
         ], [
-            'kode_mapel.required' => 'Kode mapel harus diisi',
-            'kode_mapel.min' => 'Kode mapel minimal 2 karakter',
-            'kode_mapel.unique' => 'Kode mapel sudah ada',
             'nama_mapel.required' => 'Nama mapel harus diisi',
             'nama_mapel.min' => 'Nama mapel minimal 3 karakter',
             'beban_jam.required' => 'Beban jam harus diisi',
@@ -100,7 +99,11 @@ class MapelController extends Controller
         }
 
         $mapel = Mapel::findOrFail($id);
-        $mapel->update($request->all());
+        $mapel->update([
+            'nama_mapel' => $request->nama_mapel,
+            'beban_jam' => $request->beban_jam,
+            'type' => $request->has('type') ? 'praktikum' : 'teori',
+        ]);
         return redirect()->route('admin.m.mapel.index')->with('success', 'Data Mata Pelajaran ' . $request->nama_mapel . ' berhasil diubah');
     }
 
@@ -112,5 +115,40 @@ class MapelController extends Controller
         $mapel = Mapel::findOrFail($id);
         $mapel->delete();
         return redirect()->route('admin.m.mapel.index')->with('success', 'Data Mata Pelajaran ' . $mapel->nama_mapel . ' berhasil dihapus');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file_excel' => 'required|mimes:xls,xlsx',
+        ]);
+
+        try {
+            Excel::import(new MapelImport, $request->file('file_excel'));
+            return redirect()->route('admin.m.mapel.index')->with('success', 'Data Mapel berhasil di-Import');
+        } catch (ValidationException $e) {
+            $failures = $e->failures();
+            $errorMessages = [];
+            foreach ($failures as $failure) {
+                $errorMessages[] = 'Baris ke-<b>' . $failure->row() . '</b>: ' . implode(', ', $failure->errors());
+            }
+
+            $pesanGagal = [
+                'type' => 'danger',
+                'title' => 'Gagal Mengimport Data Mapel',
+                'body' => 'Terdapat beberapa kesalahan pada file Anda:',
+                'details' => $errorMessages,
+            ];
+
+            return redirect()->route('admin.m.mapel.index')->with('pesan_error', $pesanGagal);
+        } catch (\Exception $e) {
+            $pesanGagal = [
+                'type' => 'danger',
+                'title' => 'Terjadi Kesalahan!',
+                'body' => 'Tidak dapat memproses file: ' . $e->getMessage()
+            ];
+
+            return redirect()->route('admin.m.mapel.index')->with('pesan_error', $pesanGagal);
+        }
     }
 }

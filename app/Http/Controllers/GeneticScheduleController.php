@@ -92,7 +92,7 @@ class GeneticScheduleController extends Controller
     public function show($id, Request $request)
     {
         $batch = BatchJadwal::findOrFail($id);
-        $kelasList = Kelas::orderBy('kelas', 'asc')->get();
+        $kelasList = Kelas::orderBy('nama_kelas', 'asc')->get();
 
         // Ambil filter kelas dari dropdown, jika tidak ada, ambil kelas pertama
         $selectedKelasId = $request->get('kelas_id') ?? ($kelasList->first()->id ?? null);
@@ -118,6 +118,7 @@ class GeneticScheduleController extends Controller
     public function print($id, Request $request)
     {
         $batch = BatchJadwal::findOrFail($id);
+        $academicYears = TahunAjaran::where('is_active', true)->first();
         $kelas = Kelas::findOrFail($request->get('kelas_id'));
 
         $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
@@ -134,6 +135,6 @@ class GeneticScheduleController extends Controller
         }
 
         // Return ke view khusus cetak (tanpa sidebar Mazer)
-        return view('admin.jadwal.print', compact('batch', 'kelas', 'days', 'slots', 'jadwalMatrix'));
+        return view('admin.jadwal.print', compact('batch', 'kelas', 'days', 'slots', 'jadwalMatrix', 'academicYears'));
     }
 }
