@@ -40,6 +40,8 @@ Route::prefix('admin/jadwal')->name('admin.jadwal.')->group(function () {
     Route::post('/generate', [GeneticScheduleController::class, 'generate'])->name('generate');
     Route::get('/{id}/show', [GeneticScheduleController::class, 'show'])->name('show');
     Route::get('/{id}/print', [GeneticScheduleController::class, 'print'])->name('print');
+    Route::get('/print-all/{id}', [GeneticScheduleController::class, 'printAll'])->name('printAll');
     Route::post('/{id}/activate', [GeneticScheduleController::class, 'activate'])->name('activate');
     Route::delete('/{id}', [GeneticScheduleController::class, 'destroy'])->name('destroy');
+    Route::put('/update-manual/{id}', [GeneticScheduleController::class, 'updateManual'])->name('updateManual');
 });

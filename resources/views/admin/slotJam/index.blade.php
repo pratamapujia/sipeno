@@ -51,6 +51,9 @@
                     @endif
                   </td>
                   <td>
+                    <a href="{{ route('admin.m.slotJam.edit', Hashids::encode($data->id)) }}" class="btn icon icon-left btn-sm btn-warning">
+                      <i class="fas fa-edit"></i> Edit
+                    </a>
                     <form action="{{ route('admin.m.slotJam.destroy', $data->id) }}" method="POST" class="d-inline">
                       @csrf
                       @method('DELETE')

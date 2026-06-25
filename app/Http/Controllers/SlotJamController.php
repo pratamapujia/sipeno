@@ -87,15 +87,13 @@ class SlotJamController extends Controller
     {
         $validasi = Validator::make($request->all(), [
             'slot_number' => 'required|numeric',
-            'start_time' => 'required|date_format:H:i',
-            'end_time' => 'required|date_format:H:i',
+            'start_time' => 'required',
+            'end_time' => 'required',
         ], [
             'slot_number.required' => 'Slot harus diisi',
             'slot_number.numeric' => 'Slot harus angka',
             'start_time.required' => 'Jam mulai harus diisi',
-            'start_time.date_format' => 'Format jam mulai harus HH:MM',
             'end_time.required' => 'Jam selesai harus diisi',
-            'end_time.date_format' => 'Format jam selesai harus HH:MM',
         ]);
 
         if ($validasi->fails()) {

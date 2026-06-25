@@ -14,6 +14,6 @@ class BatchJadwal extends Model
 {
     public function jadwal(): HasMany
     {
-        return $this->hasMany(Jadwal::class);
+        return $this->hasMany(Jadwal::class, 'schedule_batch_id');
     }
 }

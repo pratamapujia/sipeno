@@ -44,22 +44,18 @@ class GeneticScheduleController extends Controller
         }
 
         try {
-            $batch = $this->geneticService->generate($activeYear->id);
-            return redirect()->route('admin.jadwal.index')
-                ->with('success', "Jadwal SEMPURNA berhasil dibuat tanpa ada bentrok sama sekali.");
-        } catch (\Exception $e) {
-            $msg = $e->getMessage();
+            // Panggil Service
+            $result = $this->geneticService->generate($activeYear->id);
 
-            // Cek apakah error ini berisi rincian JSON dari diagnosa konflik
-            if (strpos($msg, 'KONFLIK_JSON:') === 0) {
-                $detailArray = json_decode(substr($msg, 13), true);
-                return redirect()->route('admin.jadwal.index')
-                    ->with('error_banyak', $detailArray);
+            // Skenario A: Jadwal berhasil dibuat tanpa ada bentrok sama sekali
+            if ($result['status'] === 'perfect') {
+                return redirect()->route('admin.jadwal.index')->with('success', "Jadwal SEMPURNA berhasil dibuat tanpa ada bentrok sama sekali.");
             }
 
-            // Jika error biasa (misal database / relasi kosong)
-            return redirect()->route('admin.jadwal.index')
-                ->with('error', 'Gagal: ' . $msg);
+            // Skenario B: Jadwal berhasil disimpan, tapi ada aturan shift/jumat yang dilanggar
+            return redirect()->route('admin.jadwal.index')->with('success', 'Jadwal berhasil dibuat sebagai DRAFT')->with('warning_banyak', $result['conflicts']);
+        } catch (\Exception $e) {
+            return redirect()->route('admin.jadwal.index')->with('error',  'GAGAL Fatal: ', $e->getMessage());
         }
     }
 
@@ -136,5 +132,69 @@ class GeneticScheduleController extends Controller
 
         // Return ke view khusus cetak (tanpa sidebar Mazer)
         return view('admin.jadwal.print', compact('batch', 'kelas', 'days', 'slots', 'jadwalMatrix', 'academicYears'));
+    }
+
+    public function printAll($id)
+    {
+        $batch = BatchJadwal::findOrFail($id);
+        $academicYears = TahunAjaran::where('is_active', true)->first();
+
+        // Ambil semua kelas yang terdaftar
+        $kelasList = Kelas::orderBy('nama_kelas', 'asc')->get();
+
+        $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
+        $slots = SlotJam::orderBy('slot_number', 'asc')->get();
+
+        // Ambil semua jadwal yang ada pada batch ini, lalu kelompokkan berdasarkan kelas_id
+        $allSchedules = Jadwal::with(['guru', 'mapel', 'slotJam'])
+            ->where('schedule_batch_id', $id)
+            ->get()
+            ->groupBy('kelas_id');
+
+        // Susun matriks jadwal untuk setiap kelas
+        $kelasMatrix = [];
+        foreach ($kelasList as $kelas) {
+            $schedulesForKelas = $allSchedules->get($kelas->id) ?? collect();
+
+            $matrix = [];
+            foreach ($schedulesForKelas as $s) {
+                $matrix[$s->time_slot_id][$s->day] = $s;
+            }
+
+            $kelasMatrix[$kelas->id] = $matrix;
+        }
+
+        // Return ke view baru khusus cetak massal
+        return view('admin.jadwal.printAll', compact('batch', 'kelasList', 'days', 'slots', 'kelasMatrix', 'academicYears'));
+    }
+
+    public function updateManual(Request $request, $id)
+    {
+        $request->validate([
+            'day' => 'required',
+            'time_slot_id' => 'required',
+        ]);
+
+        $jadwal = Jadwal::findOrFail($id);
+
+        // 1. Validasi Bentrok Manual: Pastikan guru tidak sedang mengajar di tempat lain pada jam tujuan
+        $cekGuruBentrok = Jadwal::where('schedule_batch_id', $jadwal->schedule_batch_id)
+            ->where('day', $request->day)
+            ->where('time_slot_id', $request->time_slot_id)
+            ->where('guru_id', $jadwal->guru_id)
+            ->where('id', '!=', $jadwal->id) // Abaikan ID jadwal ini sendiri
+            ->exists();
+
+        if ($cekGuruBentrok) {
+            return redirect()->back()->with('error', 'Gagal memindah! Guru tersebut sudah memiliki jadwal mengajar di kelas lain pada hari dan jam tersebut.');
+        }
+
+        // 2. Jika aman, lakukan pembaruan (pindah jadwal)
+        $jadwal->update([
+            'day' => $request->day,
+            'time_slot_id' => $request->time_slot_id,
+        ]);
+
+        return redirect()->back()->with('success', 'Jadwal berhasil dipindahkan secara manual.');
     }
 }

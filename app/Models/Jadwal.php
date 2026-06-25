@@ -33,7 +33,7 @@ class Jadwal extends Model
 
     public function slotJam(): BelongsTo
     {
-        return $this->belongsTo(SlotJam::class);
+        return $this->belongsTo(SlotJam::class, 'time_slot_id');
     }
 
     public function kelas(): BelongsTo

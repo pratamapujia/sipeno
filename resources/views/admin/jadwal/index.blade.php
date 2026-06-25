@@ -8,7 +8,7 @@
 
 @section('main')
   <div class="flash-data" data-berhasil="{{ Session::get('success') }}"></div>
-  <div class="flash-data" data-gagal="{{ Session::get('error') }}"></div>
+  {{-- <div class="flash-data" data-gagal="{{ Session::get('error') }}"></div> --}}
 
   <div class="page-heading">
     <div class="page-title">
@@ -34,6 +34,19 @@
       </div>
     </div>
 
+    @if (session('warning_banyak'))
+      <div class="alert alert-light-warning alert-dismissible show fade mt-3">
+        <h6><i class="fas fa-exclamation-triangle me-2"></i> Simulasi Selesai Dengan Catatan:</h6>
+        <p class="small mb-2">Algoritma tidak menemukan kombinasi 100% sempurna. Data tetap disimpan sebagai <b>Draft</b>. Silakan lakukan penyesuaian manual pada rincian berikut:</p>
+        <ul class="mb-0 text-sm">
+          @foreach (session('warning_banyak') as $warnMsg)
+            <li>{!! $warnMsg !!}</li>
+          @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    @endif
+
     @if (session('error_banyak'))
       <div class="alert alert-light-danger color-danger show fade">
         <h5 class="alert-heading"><i class="fas fa-times-circle me-2"></i> Simulasi Gagal: Terdeteksi Jadwal Bentrok</h5>
@@ -51,13 +64,6 @@
       <div class="alert alert-light-danger color-danger alert-dismissible show fade">
         <i class="fas fa-exclamation-triangle me-2"></i> <strong>Peringatan Algoritma:</strong>
         <span class="ms-1">{{ session('error') }}</span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-    @endif
-
-    @if (session('success_alert'))
-      <div class="alert alert-light-success color-success alert-dismissible show fade">
-        <i class="fas fa-check-circle me-2"></i> {{ session('success_alert') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
     @endif

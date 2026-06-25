@@ -35,7 +35,7 @@ return new class extends Migration
         Schema::create('teacher_availibilities', function (Blueprint $table) {
             $table->id();
             $table->foreignId('guru_id')->constrained('teachers')->onDelete('cascade');
-            $table->enum('day', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu']);
+            $table->enum('day', ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat']);
             $table->foreignId('time_slot_id')->constrained('time_slots')->onDelete('cascade');
             $table->boolean('is_available')->default(true);
             $table->timestamps();
