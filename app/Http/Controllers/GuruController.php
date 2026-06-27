@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Imports\GuruImport;
 use App\Models\Guru;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Validators\ValidationException;
@@ -39,19 +42,40 @@ class GuruController extends Controller
             'nama_guru' => 'required|min:3',
             'jenis_kelamin' => 'required',
             'status' => 'required',
+            'email' => 'required|email|unique:users,email',
         ], [
             'nip.unique' => 'NIP sudah terdaftar',
             'nama_guru.required' => 'Nama Guru harus diisi',
             'nama_guru.min' => 'Nama Guru minimal 3 karakter',
             'jenis_kelamin.required' => 'Pilih salah satu',
             'status.required' => 'Pilih status guru',
+            'email.required' => 'Email harus diisi',
+            'email.unique' => 'Email sudah terdaftar',
+            'email.email' => 'Format email tidak valid',
         ]);
 
         if ($validasi->fails()) {
             return redirect()->back()->withErrors($validasi)->withInput();
         }
 
-        Guru::create($request->all());
+        DB::transaction(function () use ($request) {
+            $user = User::create([
+                'name' => $request->nama_guru,
+                'email' => $request->email,
+                'password' => Hash::make('guru123'),
+            ]);
+
+            $user->assignRole('guru');
+
+            Guru::create([
+                'users_id' => $user->id,
+                'nip' => $request->nip,
+                'nama_guru' => $request->nama_guru,
+                'jenis_kelamin' => $request->jenis_kelamin,
+                'status' => $request->status,
+            ]);
+        });
+
         return redirect()->route('admin.m.guru.index')->with('success', 'Data Guru ' . $request->nama_guru . ' berhasil disimpan');
     }
 
@@ -83,25 +107,37 @@ class GuruController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $validasi = Validator::make($request->all(), [
-            'nip' => 'unique:teachers,nip,' . $id,
-            'nama_guru' => 'required|min:3',
-            'jenis_kelamin' => 'required',
-            'status' => 'required',
-        ], [
-            'nip.unique' => 'NIP sudah terdaftar',
-            'nama_guru.required' => 'Nama Guru harus diisi',
-            'nama_guru.min' => 'Nama Guru minimal 3 karakter',
-            'jenis_kelamin.required' => 'Pilih salah satu',
-            'status.required' => 'Pilih status guru',
+        $teacher = Guru::findOrFail($id);
+
+        $request->validate([
+            'nama_guru'     => 'required',
+            'nip'           => 'required|unique:teachers,nip,' . $teacher->id,
+            'jenis_kelamin' => 'required|in:L,P',
+            'status'        => 'required',
+            'email'         => 'required|email|unique:users,email,' . $teacher->users_id,
+            'roles'         => 'required|array', // Input berupa array checkbox dari form
         ]);
 
-        if ($validasi->fails()) {
-            return redirect()->back()->withErrors($validasi)->withInput();
-        }
+        DB::transaction(function () use ($request, $teacher) {
+            // 1. Update data akun login di tabel users
+            $user = User::findOrFail($teacher->users_id);
+            $user->update([
+                'name'  => $request->nama_guru,
+                'email' => $request->email,
+            ]);
 
-        $guru = Guru::findOrFail($id);
-        $guru->update($request->all());
+            // 2. Sinkronisasi Role Spatie (Kunci Utama Multi-Role)
+            // Jika request berisi ['admin', 'guru'], maka user akan memiliki kedua akses tersebut
+            $user->syncRoles($request->roles);
+
+            // 3. Update data biodata di tabel teachers
+            $teacher->update([
+                'nama_guru'     => $request->nama_guru,
+                'nip'           => $request->nip,
+                'jenis_kelamin' => $request->jenis_kelamin,
+                'status'        => $request->status,
+            ]);
+        });
         return redirect()->route('admin.m.guru.index')->with('success', 'Data Guru ' . $guru->nama_guru . ' berhasil diperbarui');
     }
 
