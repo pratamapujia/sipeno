@@ -8,6 +8,22 @@
 
 ---
 
+## 📸 Tampilan Aplikasi
+
+<p align="center">
+  <img src="screenshots/login-sipeno.png" width="800" alt="Halaman Login">
+  <br>
+  <i>Halaman Login Aplikasi</i>
+</p>
+
+<p align="center">
+  <img src="screenshots/dashboard-sipeno.png" width="800" alt="Halaman Login">
+  <br>
+  <i>Halaman Dashboard Aplikasi</i>
+</p>
+
+---
+
 ## ✨ Fitur Unggulan
 
 - **⚡ Otomatisasi Penjadwalan (Auto-Generate):** Menyusun ribuan kombinasi jadwal hanya dengan satu klik menggunakan algoritma cerdas tanpa risiko bentrok (_Zero-Conflict_).
@@ -40,9 +56,12 @@ Ikuti langkah-langkah berikut untuk menjalankan aplikasi **SIPENO** di lingkunga
 
 Pastikan perangkat Anda sudah terinstal:
 
-- PHP >= 8.2
-- Composer
-- MySQL Server
+- [PHP >= 8.3](https://www.php.net/downloads.php)
+- [Composer](https://getcomposer.org/download/)
+- [Laragon >= 6](https://github.com/leokhoa/laragon/releases)
+  **NB:** Untuk lokal server gunakan sesuai keinginan anda (XAMPP, Laravel Herd, dll)
+
+---
 
 ### 🛠️ Langkah-Langkah Instalasi
 
