@@ -107,20 +107,20 @@ class GuruController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $teacher = Guru::findOrFail($id);
+        $guru = Guru::findOrFail($id);
 
         $request->validate([
             'nama_guru'     => 'required',
-            'nip'           => 'required|unique:teachers,nip,' . $teacher->id,
+            'nip'           => 'required|unique:teachers,nip,' . $guru->id,
             'jenis_kelamin' => 'required|in:L,P',
             'status'        => 'required',
-            'email'         => 'required|email|unique:users,email,' . $teacher->users_id,
+            'email'         => 'required|email|unique:users,email,' . $guru->users_id,
             'roles'         => 'required|array', // Input berupa array checkbox dari form
         ]);
 
-        DB::transaction(function () use ($request, $teacher) {
+        DB::transaction(function () use ($request, $guru) {
             // 1. Update data akun login di tabel users
-            $user = User::findOrFail($teacher->users_id);
+            $user = User::findOrFail($guru->users_id);
             $user->update([
                 'name'  => $request->nama_guru,
                 'email' => $request->email,
@@ -131,7 +131,7 @@ class GuruController extends Controller
             $user->syncRoles($request->roles);
 
             // 3. Update data biodata di tabel teachers
-            $teacher->update([
+            $guru->update([
                 'nama_guru'     => $request->nama_guru,
                 'nip'           => $request->nip,
                 'jenis_kelamin' => $request->jenis_kelamin,
@@ -157,7 +157,48 @@ class GuruController extends Controller
             'file_excel' => 'required|mimes:xls,xlsx',
         ]);
 
+        // 👇 TAMBAHKAN KODE INI SEMENTARA UNTUK DEBUGGING 👇
+        // $data = \Maatwebsite\Excel\Facades\Excel::toArray(new GuruImport, $request->file('file_excel'));
+        // dd($data);
+
         try {
+            // 1. "Intip" isi file Excel ke dalam bentuk array terlebih dahulu
+            $data = Excel::toArray(new GuruImport, $request->file('file_excel'));
+
+            // 2. Cek apakah file benar-benar memiliki data
+            if (empty($data) || empty($data[0])) {
+                return redirect()->route('admin.m.guru.index')->with('pesan_error', [
+                    'type' => 'danger',
+                    'title' => 'File Kosong',
+                    'body' => 'File Excel yang Anda unggah tidak memiliki data sama sekali.'
+                ]);
+            }
+
+            // 3. Ambil daftar nama kolom (header) yang dibaca oleh sistem
+            $uploadedHeaders = array_keys($data[0][0]);
+
+            // 4. Definisikan header template yang wajib ada
+            $expectedHeaders = ['nip', 'nama_guru', 'email', 'jenis_kelamin', 'status'];
+
+            // 5. Cari tahu apakah ada kolom wajib yang tidak ditemukan di file yang diupload
+            $missingHeaders = array_diff($expectedHeaders, $uploadedHeaders);
+
+            // 6. Jika ada kolom yang hilang, batalkan import dan tampilkan alert khusus
+            if (!empty($missingHeaders)) {
+                $pesanGagal = [
+                    'type' => 'danger',
+                    'title' => 'Format Excel Tidak Sesuai!',
+                    'body' => 'File yang Anda unggah tidak menggunakan format/template yang benar.',
+                    'details' => [
+                        'Kolom yang tidak ditemukan: <b>' . implode(', ', $missingHeaders) . '</b>',
+                        'Pastikan header baris pertama persis: nip, nama_guru, email, jenis_kelamin, status'
+                    ],
+                ];
+
+                return redirect()->route('admin.m.guru.index')->with('pesan_error', $pesanGagal);
+            }
+
+            // 7. Lakukan import data
             Excel::import(new GuruImport, $request->file('file_excel'));
             return redirect()->route('admin.m.guru.index')->with('success', 'Data Guru berhasil di-Import');
         } catch (ValidationException $e) {

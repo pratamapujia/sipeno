@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['nip', 'nama_guru', 'jenis_kelamin', 'status'])]
+#[Fillable(['users_id', 'nip', 'nama_guru', 'jenis_kelamin', 'status'])]
 #[Table('teachers', key: 'id')]
 class Guru extends Model
 {

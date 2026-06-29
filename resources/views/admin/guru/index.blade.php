@@ -63,7 +63,7 @@
                 <th>No</th>
                 <th>NIP</th>
                 <th>Nama Guru</th>
-                <th>Jenis Kelamin</th>
+                <th>Email</th>
                 <th>Status</th>
                 <th data-sortable="false">Aksi</th>
               </tr>
@@ -74,7 +74,7 @@
                   <td>{{ $loop->iteration }}</td>
                   <td>{{ $data->nip == null ? '-' : $data->nip }}</td>
                   <td>{{ $data->nama_guru }}</td>
-                  <td>{{ $data->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan' }}</td>
+                  <td>{{ $data->user->email }}</td>
                   <td>
                     <span class="badge {{ $data->status == 'Tetap' ? 'bg-primary' : 'bg-info' }}">{{ $data->status }}</span>
                   </td>
@@ -117,7 +117,7 @@
               <ol class="mb-0 ps-3 text-black">
                 <li>Header baris pertama wajib: <b>nip</b>, <b>nama_guru</b>,<b>email</b>, <b>jenis_kelamin</b>, <b>status</b></li>
                 <li>Kolom nip bersifat <b>Opsional</b></li>
-                <li>Kolom email digunakan untuk membuat akun guru. Kolom email wajib diisi</li>
+                <li>Kolom email digunakan untuk membuat akun guru. Kolom email <b>Wajib Diisi</b></li>
                 <li>Kolom jenis_kelamin hanya boleh diisi: <b>L</b> atau <b>P</b></li>
                 <li>Kolom status hanya boleh diisi: <b>Tetap</b> atau <b>Honorer</b></li>
               </ol>
