@@ -59,7 +59,8 @@ Pastikan perangkat Anda sudah terinstal:
 - [PHP >= 8.3](https://www.php.net/downloads.php)
 - [Composer](https://getcomposer.org/download/)
 - [Laragon >= 6](https://github.com/leokhoa/laragon/releases)
-  **NB:** Untuk lokal server gunakan sesuai keinginan anda (XAMPP, Laravel Herd, dll)
+
+**NB:** Untuk lokal server gunakan sesuai keinginan anda (XAMPP, Laravel Herd, dll)
 
 ---
 
