@@ -88,8 +88,8 @@
             </a>
           </li>
           <li class="sidebar-title">Laporan</li>
-          <li class="sidebar-item  ">
-            <a href="#" class='sidebar-link'>
+          <li class="sidebar-item {{ request()->is('guru/jadwal-saya') ? 'active' : '' }} ">
+            <a href="{{ route('guru.jadwal.saya') }}" class='sidebar-link'>
               <i class="bi bi-calendar-week"></i>
               <span>Jadwal Saya</span>
             </a>
@@ -105,10 +105,10 @@
             </a>
           </li>
           <li class="sidebar-title">Laporan</li>
-          <li class="sidebar-item  ">
-            <a href="#" class='sidebar-link'>
+          <li class="sidebar-item {{ request()->is('kepsek/pemantauan') ? 'active' : '' }} ">
+            <a href="{{ route('kepsek.pemantauan') }}" class='sidebar-link'>
               <i class="bi bi-calendar3"></i>
-              <span>Jadwal Guru</span>
+              <span>Jadwal Pelajaran Aktif</span>
             </a>
           </li>
         @endrole

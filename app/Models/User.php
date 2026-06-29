@@ -32,7 +32,7 @@ class User extends Authenticatable
         ];
     }
 
-    public function teacher(): HasOne
+    public function guru(): HasOne
     {
         return $this->hasOne(Guru::class, 'users_id');
     }

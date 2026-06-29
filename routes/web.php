@@ -6,7 +6,9 @@ use App\Http\Controllers\GeneticScheduleController;
 use App\Http\Controllers\GuruController;
 use App\Http\Controllers\GuruFreeController;
 use App\Http\Controllers\GuruMapelController;
+use App\Http\Controllers\JadwalGuruController;
 use App\Http\Controllers\KelasController;
+use App\Http\Controllers\LaporanJadwalController;
 use App\Http\Controllers\MapelController;
 use App\Http\Controllers\SlotJamController;
 use App\Http\Controllers\TahunAjaranController;
@@ -62,10 +64,14 @@ Route::middleware(['auth'])->group(function () {
     // Guru Role
     Route::middleware(['role:guru'])->prefix('guru')->name('guru.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'guruDashboard'])->name('dashboard');
+        Route::get('/jadwal-saya', [JadwalGuruController::class, 'index'])->name('jadwal.saya');
+        //Print Route
+        Route::get('/jadwal-saya/print', [JadwalGuruController::class, 'print'])->name('jadwal.print');
     });
 
     // Kepsek Role
     Route::middleware(['role:kepsek'])->prefix('kepsek')->name('kepsek.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'kepsekDashboard'])->name('dashboard');
+        Route::get('/pemantauan', [LaporanJadwalController::class, 'index'])->name('pemantauan');
     });
 });

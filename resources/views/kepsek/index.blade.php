@@ -41,7 +41,7 @@
             <div class="card shadow-sm border-start border-secondary border-4">
               <div class="card-body p-3">
                 <small class="text-muted font-semibold d-block">Simulasi Draft</small>
-                <h4 class="font-extrabold mb-0 mt-1">{{ $stats['batch_draft'] }} Ranangan</h4>
+                <h4 class="font-extrabold mb-0 mt-1">{{ $stats['batch_draft'] }} Rancangan</h4>
               </div>
             </div>
           </div>
@@ -62,7 +62,7 @@
                     <p class="text-muted text-xs mb-0">Terakhir disinkronisasi oleh Kurikulum pada: {{ $activeBatch->updated_at->format('d/m/Y H:i') }} Wib</p>
                   </div>
                   <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                    <a href="{{ route('admin.jadwal.show', $activeBatch->id) }}" class="btn btn-sm btn-outline-primary shadow-sm">
+                    <a href="{{ route('kepsek.pemantauan') }}" class="btn btn-sm btn-outline-primary shadow-sm">
                       <i class="fas fa-search me-1"></i> Audit Distribusi Jam
                     </a>
                   </div>

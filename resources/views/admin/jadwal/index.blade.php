@@ -112,7 +112,7 @@
                     @if ($batch->status != 'active')
                       <form action="{{ route('admin.jadwal.activate', $batch->id) }}" method="POST" class="d-inline">
                         @csrf
-                        <button type="submit" class="btn btn-sm btn-success icon icon-left" onclick="return confirm('Jadikan jadwal ini sebagai jadwal utama sekolah?')">
+                        <button type="submit" class="btn btn-sm btn-success icon icon-left btn-gunakan">
                           <i class="fas fa-check"></i> Gunakan
                         </button>
                       </form>
@@ -178,6 +178,31 @@
           cancelButtonColor: "#dc3545",
           confirmButtonText: "Ya, Hapus",
           preConfirm: () => form.submit()
+        });
+      });
+    });
+
+    document.querySelectorAll('.btn-gunakan').forEach(button => {
+      button.addEventListener('click', function() {
+        const form = this.closest('form');
+        const nama = this.dataset.nama;
+        Swal.fire({
+          title: "Gunakan Simulasi?",
+          html: `Data jadwal <b class="text-primary">${nama}</b> beserta rinciannya akan diset sebagai jadwal utama.`,
+          icon: "info",
+          showCancelButton: true,
+          confirmButtonColor: "#435ebe",
+          cancelButtonColor: "#dc3545",
+          confirmButtonText: "Ya, Gunakan",
+          showLoaderOnConfirm: true,
+          allowOutsideClick: () => !Swal.isLoading(),
+          preConfirm: () => {
+            // Mengubah teks tombol saat proses berjalan agar user tahu sistem tidak hang
+            Swal.getConfirmButton().textContent = 'Sedang Memproses...';
+            return new Promise((resolve) => {
+              form.submit();
+            });
+          }
         });
       });
     });

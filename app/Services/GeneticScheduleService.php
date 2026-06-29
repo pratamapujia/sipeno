@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\DB;
 class GeneticScheduleService
 {
   private $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
-  private $popSize = 40;
-  private $maxGenerations = 2500;
+  private $popSize = 100;
+  private $maxGenerations = 5000;
 
   public function generate($academicYearId)
   {

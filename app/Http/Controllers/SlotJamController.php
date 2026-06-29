@@ -32,12 +32,13 @@ class SlotJamController extends Controller
     public function store(Request $request)
     {
         $validasi = Validator::make($request->all(), [
-            'slot_number' => 'required|numeric',
+            'slot_number' => 'required|numeric|unique:time_slots,slot_number',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i',
         ], [
             'slot_number.required' => 'Slot harus diisi',
             'slot_number.numeric' => 'Slot harus angka',
+            'slot_number.unique' => 'Slot sudah terdaftar',
             'start_time.required' => 'Jam mulai harus diisi',
             'start_time.date_format' => 'Format jam mulai harus HH:MM',
             'end_time.required' => 'Jam selesai harus diisi',
@@ -86,12 +87,13 @@ class SlotJamController extends Controller
     public function update(Request $request, string $id)
     {
         $validasi = Validator::make($request->all(), [
-            'slot_number' => 'required|numeric',
+            'slot_number' => 'required|numeric|unique:time_slots,slot_number,' . $id,
             'start_time' => 'required',
             'end_time' => 'required',
         ], [
             'slot_number.required' => 'Slot harus diisi',
             'slot_number.numeric' => 'Slot harus angka',
+            'slot_number.unique' => 'Slot sudah terdaftar',
             'start_time.required' => 'Jam mulai harus diisi',
             'end_time.required' => 'Jam selesai harus diisi',
         ]);

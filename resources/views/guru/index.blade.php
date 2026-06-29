@@ -21,7 +21,7 @@
         {{-- Jadwal Mengajar Hari Ini --}}
         <div class="card shadow-sm">
           <div class="card-header bg-transparent border-bottom d-flex justify-content-between align-items-center">
-            <h4 class="mb-0"><i class="fas fa-calendar-day text-warning me-2"></i> Agenda Mengajar Hari Ini ({{ date('l') }})</h4>
+            <h4 class="mb-0"><i class="fas fa-calendar-day text-warning me-2"></i> Agenda Mengajar Hari Ini ({{ $hari_ini }})</h4>
           </div>
           <div class="card-body p-0">
             <div class="table-responsive">
