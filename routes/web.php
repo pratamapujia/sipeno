@@ -43,6 +43,9 @@ Route::middleware(['auth'])->group(function () {
             Route::post('mapel/import', [MapelController::class, 'import'])->name('mapel.import');
             Route::post('kelas/import', [KelasController::class, 'import'])->name('kelas.import');
             Route::post('slotJam/import', [SlotJamController::class, 'import'])->name('slotJam.import');
+
+            // Switch Status Tahun Ajaran
+            Route::patch('thnAjaran/{id}/toggle-status', [TahunAjaranController::class, 'toggleStatus'])->name('thnAjaran.toggleStatus');
         });
 
         // Plotting Guru

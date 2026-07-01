@@ -78,8 +78,8 @@
                 <label class="form-label" for="is_active">Status</label>
                 <select name="is_active" id="is_active" class="form-select @error('is_active') is-invalid @enderror">
                   <option value="">Pilih</option>
-                  <option value="0" {{ old('is_active') == false ? 'selected' : '' }}>Tidak Aktif</option>
-                  <option value="1" {{ old('is_active') == true ? 'selected' : '' }}>Aktif</option>
+                  <option value="0" {{ old('is_active', $thnAjaran->is_active) == '0' ? 'selected' : '' }}>Tidak Aktif</option>
+                  <option value="1" {{ old('is_active', $thnAjaran->is_active) == '1' ? 'selected' : '' }}>Aktif</option>
                 </select>
                 @error('is_active')
                   <div class="invalid-feedback">

@@ -109,4 +109,23 @@ class TahunAjaranController extends Controller
         $thnAjaran->delete();
         return redirect()->route('admin.m.thnAjaran.index')->with('success', 'Data Tahun Ajaran ' . $thnAjaran->tahun_ajaran . ' berhasil dihapus');
     }
+
+    public function toggleStatus(Request $request, string $id)
+    {
+        $thnAjaran = TahunAjaran::findOrFail($id);
+        if (!$thnAjaran->is_active) {
+            TahunAjaran::where('id', '!=', $id)->update(['is_active' => 0]);
+            $thnAjaran->is_active = 1;
+        } else {
+            $thnAjaran->is_active = 0;
+        }
+
+        $thnAjaran->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Status tahun ajaran berhasil diubah',
+            'is_active' => $thnAjaran->is_active
+        ]);
+    }
 }
