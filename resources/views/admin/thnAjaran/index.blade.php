@@ -18,6 +18,7 @@
       <div class="row">
         <div class="col-12 col-md-6">
           <h3>Data Master Tahun Ajaran</h3>
+          <p class="text-subtitle text-muted">Kelola Tahun Ajaran di sekolah.</p>
         </div>
       </div>
     </div>

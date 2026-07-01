@@ -6,68 +6,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cetak Semua Jadwal Kelas</title>
 
-    <link rel="stylesheet" href="{{ asset('assets/css/main/app.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/css/shared/iconly.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/compiled/css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/extensions/@fortawesome/fontawesome-free/css/all.min.css') }}">
 
     <style>
       body {
-        background-color: #fff !important;
-        color: #000 !important;
-        font-family: 'Arial', sans-serif;
-        font-size: 11px;
+        font-size: 11px !important;
+        background-color: #fff;
       }
 
-      .print-header {
+      .table-bw {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1.5rem;
+      }
+
+      .table-bw th,
+      .table-bw td {
+        border: 2px solid #000 !important;
+        padding: 5px 4px !important;
         text-align: center;
-        margin-bottom: 25px;
-        border-bottom: 3px double #000;
-        padding-bottom: 10px;
+        vertical-align: middle !important;
+        color: #000 !important;
       }
 
-      .print-header h2 {
-        font-size: 18px;
-        font-weight: bold;
+      .table-bw th {
+        font-weight: 900 !important;
         text-transform: uppercase;
-        margin-bottom: 5px;
-      }
-
-      .shift-section {
-        margin-bottom: 25px;
+        background-color: transparent !important;
       }
 
       .shift-title {
         font-size: 12px;
-        font-weight: bold;
-        background-color: #f0f0f0 !important;
+        font-weight: 900;
         padding: 5px 10px;
-        border: 1px solid #000;
+        border: 2px solid #000;
         border-bottom: none;
         margin-bottom: 0;
         display: inline-block;
-      }
-
-      .table-print {
-        width: 100%;
-        border-collapse: collapse;
-        margin-bottom: 15px;
-      }
-
-      .table-print th,
-      .table-print td {
-        border: 1px solid #000 !important;
-        padding: 5px 4px !important;
-        text-align: center;
-        vertical-align: middle !important;
-      }
-
-      .table-print th {
-        background-color: #e5e5e5 !important;
-        font-weight: bold;
+        color: #000;
       }
 
       .cell-jam {
         font-weight: bold;
-        background-color: #fafafa;
         width: 12%;
       }
 
@@ -76,27 +57,22 @@
       }
 
       .text-mapel {
-        font-weight: bold;
+        font-weight: 900;
         display: block;
+        color: #000;
       }
 
       .text-guru {
         font-size: 10px;
-        color: #444;
         display: block;
+        color: #000;
       }
 
       .bg-istirahat {
-        background-color: #f5f5f5 !important;
         font-style: italic;
-        font-weight: bold;
-      }
-
-      .no-print-area {
-        background: #f8f9fa;
-        padding: 10px;
-        border-bottom: 1px solid #ddd;
-        margin-bottom: 20px;
+        font-weight: 900;
+        color: #000;
+        letter-spacing: 2px;
       }
 
       /* KUNCI UTAMA AMAN CETAK PER HALAMAN */
@@ -110,34 +86,40 @@
         }
 
         body {
-          padding: 0;
-          margin: 0;
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
         }
 
         .shift-section {
           page-break-inside: avoid;
         }
+
+        @page {
+          margin: 1cm;
+        }
       }
     </style>
   </head>
 
-  <body onload="window.print();">
+  <body class="bg-white text-dark p-4" onload="window.print();">
 
-    <div class="no-print no-print-area d-flex justify-content-between align-items-center">
+    <div class="no-print bg-light p-3 mb-4 rounded d-flex justify-content-between align-items-center border">
       <span class="text-muted small"><i class="fas fa-info-circle"></i> Mode Cetak Massal: Setiap kelas akan otomatis berpindah ke halaman baru saat dicetak.</span>
       <div>
-        <button onclick="window.print();" class="btn btn-sm btn-primary me-2"><i class="fas fa-print"></i> Cetak</button>
-        <button onclick="window.close();" class="btn btn-sm btn-secondary"><i class="fas fa-times"></i> Tutup</button>
+        <button onclick="window.print();" class="btn btn-sm btn-primary fw-bold me-2"><i class="fas fa-print me-1"></i> Cetak</button>
+        <button onclick="window.close();" class="btn btn-sm btn-secondary fw-bold"><i class="fas fa-times me-1"></i> Tutup</button>
       </div>
     </div>
 
     {{-- LOOPING UTAMA: Mengulang Cetak untuk Setiap Kelas --}}
     @foreach ($kelasList as $index => $kelas)
       @php
-        // Ambil matriks jadwal khusus kelas ini
         $matrixId = $kelasMatrix[$kelas->id] ?? [];
-
-        // Pisahkan data shift
         $shifts = [
             'Pagi' => [
                 'label' => 'SHIFT PAGI (Jam ke-1 s/d 12)',
@@ -150,23 +132,27 @@
         ];
       @endphp
 
-      {{-- Bungkus per kelas dengan div page-break (kecuali iterasi terakhir agar tidak ada kertas kosong di akhir) --}}
-      <div class="container-fluid {{ !$loop->last ? 'page-break' : '' }}">
+      <div class="container-fluid px-0 {{ !$loop->last ? 'page-break' : '' }}">
 
-        {{-- Kop Jadwal Kelas --}}
-        <div class="print-header">
-          <h2>Jadwal Pelajaran Kelas {{ $kelas->nama_kelas }}</h2>
-          <p>Tahun Ajaran: <b>{{ $academicYears->tahun_ajaran }}</b> | Semester: <b>{{ $academicYears->semester }}</b></p>
-          <small class="text-muted">Batch Model: {{ $batch->nama }}</small>
+        {{-- KOP SURAT (Muncul di setiap halaman kelas) --}}
+        <div class="text-center mb-4">
+          <img src="{{ asset('assets/static/images/kop-print.png') }}" alt="Kop Surat SMK PGRI 1 Sidoarjo" class="img-fluid w-100">
+        </div>
+
+        {{-- HEADER DOKUMEN --}}
+        <div class="text-center mb-4 text-black">
+          <h4 class="fw-bold text-uppercase mb-1" style="color: #000;">Jadwal Pelajaran Kelas {{ $kelas->nama_kelas }}</h4>
+          <p class="mb-0" style="color: #000;">Tahun Ajaran: <b>{{ $academicYears->tahun_ajaran }}</b> | Semester: <b>{{ $academicYears->semester }}</b></p>
+          <small>Batch Model: {{ $batch->nama }}</small>
         </div>
 
         {{-- Render Tabel Shift Pagi & Siang --}}
         @foreach ($shifts as $shift)
           @if ($shift['slots']->count() > 0)
-            <div class="shift-section">
+            <div class="shift-section mb-4">
               <div class="shift-title">{{ $shift['label'] }}</div>
 
-              <table class="table-print">
+              <table class="table-bw">
                 <thead>
                   <tr>
                     <th>Jam / Waktu</th>
@@ -193,7 +179,7 @@
                               <span class="text-mapel">{{ $s->mapel->nama_mapel }}</span>
                               <span class="text-guru">{{ $s->guru->nama_guru }}</span>
                             @else
-                              <span class="text-muted italic">-</span>
+                              <span class="text-kosong">-</span>
                             @endif
                           </td>
                         @endif
@@ -206,14 +192,13 @@
           @endif
         @endforeach
 
-        {{-- Tanda Tangan Dokumen --}}
-        <div class="row mt-4" style="page-break-inside: avoid;">
+        {{-- TANDA TANGAN --}}
+        <div class="row mt-4" style="page-break-inside: avoid; color: #000;">
           <div class="col-8"></div>
           <div class="col-4 text-center">
-            <p>Sidoarjo, {{ now()->translatedFormat('d F Y') }}</p>
-            <p style="margin-bottom: 50px;">Waka. Urusan Kurikulum</p>
-            <p class="fw-bold text-decoration-underline" style="margin-bottom: 0;">_______________________</p>
-            <p class="text-muted small">NIP. .........................</p>
+            <p class="mb-1">Sidoarjo, {{ now()->translatedFormat('d F Y') }}</p>
+            <p style="margin-bottom: 80px;">Waka Kurikulum</p>
+            <p class="fw-bold text-decoration-underline mb-0">{{ Auth::user()->name }}</p>
           </div>
         </div>
 

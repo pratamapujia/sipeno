@@ -49,10 +49,10 @@
             <thead>
               <tr>
                 <th>No</th>
-                <th>Nama Guru</th>
-                <th>Mata Pelajaran</th>
-                <th>Beban Jam</th>
-                <th>Kelas Target</th>
+                <th width="30%">Nama Guru</th>
+                <th width="20%">Mata Pelajaran</th>
+                <th>Bobot</th>
+                <th>Kelas</th>
                 <th data-sortable="false">Aksi</th>
               </tr>
             </thead>

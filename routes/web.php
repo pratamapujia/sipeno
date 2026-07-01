@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CetakJadwalController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\GeneticScheduleController;
 use App\Http\Controllers\GuruController;
@@ -66,6 +67,14 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{id}/activate', [GeneticScheduleController::class, 'activate'])->name('activate');
             Route::delete('/{id}', [GeneticScheduleController::class, 'destroy'])->name('destroy');
             Route::put('/update-manual/{id}', [GeneticScheduleController::class, 'updateManual'])->name('updateManual');
+        });
+
+        // Cetak Jadwal
+        Route::prefix('admin/cetak')->name('admin.cetak.')->group(function () {
+            Route::get('index', [CetakJadwalController::class, 'index'])->name('index');
+            Route::get('guru', [CetakJadwalController::class, 'printGuru'])->name('guru');
+            Route::get('kelas', [CetakJadwalController::class, 'printKelas'])->name('kelas');
+            Route::get('semua', [CetakJadwalController::class, 'printAll'])->name('semua');
         });
     });
 

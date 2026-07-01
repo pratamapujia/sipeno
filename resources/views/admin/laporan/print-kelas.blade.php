@@ -4,9 +4,8 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Jadwal - {{ $guru->nama_guru }}</title>
+    <title>Cetak Jadwal Kelas - {{ $kelas->nama_kelas }}</title>
 
-    {{-- Memanggil CSS Utama Mazer --}}
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/extensions/@fortawesome/fontawesome-free/css/all.min.css') }}">
 
@@ -16,7 +15,6 @@
         background-color: #fff;
       }
 
-      /* TEMA TABEL HITAM PUTIH (PRINT RESMI) */
       .table-bw {
         width: 100%;
         border-collapse: collapse;
@@ -26,22 +24,18 @@
       .table-bw th,
       .table-bw td {
         border: 2px solid #000 !important;
-        /* Border tebal dan hitam pekat */
         padding: 8px 10px;
         vertical-align: middle;
         color: #000 !important;
-        /* Teks hitam murni */
       }
 
       .table-bw th {
         font-weight: 900 !important;
-        /* Header ditebalkan maksimal */
         text-transform: uppercase;
         text-align: center;
         background-color: transparent !important;
       }
 
-      /* Memaksa margin saat di-print */
       @media print {
         .no-print {
           display: none !important;
@@ -74,36 +68,14 @@
       </div>
     </div>
 
-    {{-- KOP SURAT --}}
     <div class="text-center mb-4">
       <img src="{{ asset('assets/static/images/kop-print.png') }}" alt="Kop Surat SMK PGRI 1 Sidoarjo" class="img-fluid w-100">
     </div>
 
     <div class="text-center mb-4 text-black">
-      <h4 class="fw-bold text-uppercase mb-1" style="color: #000;">Jadwal Mengajar Pendidik</h4>
-      <p class="mb-0">Sistem Informasi Penjadwalan Sekolah (SIPENO)</p>
-    </div>
-
-    <div class="row mb-3 fw-bold" style="color: #000;">
-      <div class="col-8">
-        <table class="table-borderless table-sm">
-          <tr>
-            <td width="120">Nama Guru</td>
-            <td width="10">:</td>
-            <td>{{ $guru->nama_guru }}</td>
-          </tr>
-          <tr>
-            <td>NIP / NUPTK</td>
-            <td>:</td>
-            <td>{{ $guru->nip ?? '-' }}</td>
-          </tr>
-          <tr>
-            <td>Jadwal Rilis</td>
-            <td>:</td>
-            <td>{{ $activeBatch->nama }}</td>
-          </tr>
-        </table>
-      </div>
+      <h4 class="fw-bold text-uppercase mb-1" style="color: #000;">Jadwal Pelajaran Kelas {{ $kelas->nama_kelas }}</h4>
+      <p class="mb-0" style="color: #000;">Tahun Ajaran: <b>{{ $academicYear->tahun_ajaran }}</b> | Semester: <b>{{ $academicYear->semester }}</b></p>
+      <small>Simulasi Batch: {{ $activeBatch->nama }}</small>
     </div>
 
     <div class="table-responsive">
@@ -113,8 +85,8 @@
             <th style="width: 15%;">Hari</th>
             <th style="width: 15%;">Jam Ke-</th>
             <th style="width: 20%;">Waktu</th>
-            <th style="width: 30%;">Mata Pelajaran</th>
-            <th style="width: 20%;">Kelas</th>
+            <th style="width: 25%;">Mata Pelajaran</th>
+            <th style="width: 25%;">Guru Pengajar</th>
           </tr>
         </thead>
         <tbody>
@@ -134,13 +106,13 @@
                   <td class="fw-bold">Jam ke-{{ $j->slotJam->slot_number }}</td>
                   <td>{{ substr($j->slotJam->start_time, 0, 5) }} - {{ substr($j->slotJam->end_time, 0, 5) }}</td>
                   <td class="fw-bold">{{ $j->mapel->nama_mapel }}</td>
-                  <td class="fw-bold">{{ $j->kelas->nama_kelas }}</td>
+                  <td>{{ $j->guru->nama_guru }}</td>
                 </tr>
               @endforeach
             @else
               <tr>
                 <td class="fw-bold">{{ $day }}</td>
-                <td colspan="4" class="fst-italic text-center">Tidak ada jadwal mengajar</td>
+                <td colspan="4" class="fst-italic text-center">Tidak ada jadwal kelas / Libur</td>
               </tr>
             @endif
           @endforeach
@@ -152,9 +124,8 @@
       <div class="col-8"></div>
       <div class="col-4 text-center">
         <p class="mb-1">Sidoarjo, {{ now()->translatedFormat('d F Y') }}</p>
-        <p style="margin-bottom: 80px;">Guru Mata Pelajaran</p>
-        <p class="fw-bold text-decoration-underline mb-0">{{ $guru->nama_guru }}</p>
-        <p class="small">NIP. {{ $guru->nip ?? '.........................' }}</p>
+        <p style="margin-bottom: 80px;">Waka Kurikulum</p>
+        <p class="fw-bold text-decoration-underline mb-0">{{ Auth::user()->name }}</p>
       </div>
     </div>
 

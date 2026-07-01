@@ -11,7 +11,7 @@
       </div>
     </div>
     <div class="sidebar-menu">
-      <ul class="menu">
+      <ul class="menu pb-5">
         <li class="sidebar-title">Menu</li>
         {{-- Menu Untuk Admin --}}
         @role('admin')
@@ -75,6 +75,13 @@
             <a href="{{ route('admin.jadwal.index') }}" class='sidebar-link'>
               <i class="bi bi-magic"></i>
               <span>Generate Jadwal</span>
+            </a>
+          </li>
+          <li class="sidebar-title">Laporan</li>
+          <li class="sidebar-item {{ request()->is('admin/cetak', 'admin/cetak/*') ? 'active' : '' }}">
+            <a href="{{ route('admin.cetak.index') }}" class='sidebar-link'>
+              <i class="bi bi-printer"></i>
+              <span>Lihat & Cetak Jadwal</span>
             </a>
           </li>
         @endrole

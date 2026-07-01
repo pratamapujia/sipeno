@@ -79,31 +79,9 @@
       <img src="{{ asset('assets/static/images/kop-print.png') }}" alt="Kop Surat SMK PGRI 1 Sidoarjo" class="img-fluid w-100">
     </div>
 
-    <div class="text-center mb-4 text-black">
-      <h4 class="fw-bold text-uppercase mb-1" style="color: #000;">Jadwal Mengajar Pendidik</h4>
-      <p class="mb-0">Sistem Informasi Penjadwalan Sekolah (SIPENO)</p>
-    </div>
-
-    <div class="row mb-3 fw-bold" style="color: #000;">
-      <div class="col-8">
-        <table class="table-borderless table-sm">
-          <tr>
-            <td width="120">Nama Guru</td>
-            <td width="10">:</td>
-            <td>{{ $guru->nama_guru }}</td>
-          </tr>
-          <tr>
-            <td>NIP / NUPTK</td>
-            <td>:</td>
-            <td>{{ $guru->nip ?? '-' }}</td>
-          </tr>
-          <tr>
-            <td>Jadwal Rilis</td>
-            <td>:</td>
-            <td>{{ $activeBatch->nama }}</td>
-          </tr>
-        </table>
-      </div>
+    <div class="text-center mb-3 text-black">
+      <h5 class="fw-bold text-uppercase mb-1" style="color: #000;">JADWAL MENGAJAR {{ $guru->nama_guru }}</h5>
+      <p class="small mb-0">Periode Rilis: {{ $activeBatch->nama }}</p>
     </div>
 
     <div class="table-responsive">
@@ -152,9 +130,8 @@
       <div class="col-8"></div>
       <div class="col-4 text-center">
         <p class="mb-1">Sidoarjo, {{ now()->translatedFormat('d F Y') }}</p>
-        <p style="margin-bottom: 80px;">Guru Mata Pelajaran</p>
-        <p class="fw-bold text-decoration-underline mb-0">{{ $guru->nama_guru }}</p>
-        <p class="small">NIP. {{ $guru->nip ?? '.........................' }}</p>
+        <p style="margin-bottom: 80px;">Waka Kurikulum</p>
+        <p class="fw-bold text-decoration-underline mb-0">{{ Auth::user()->name }}</p>
       </div>
     </div>
 
