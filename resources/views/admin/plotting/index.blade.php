@@ -17,7 +17,12 @@
     <div class="page-title">
       <div class="row">
         <div class="col-12">
-          <h3>Plotting Guru Tahun {{ $thnAktif->tahun_ajaran }} Semester: {{ $thnAktif->semester }}</h3>
+          {{-- if null tahun ajaran --}}
+          @if (!$thnAktif)
+            <h3>Plotting Guru Tahun : <b class="text-danger">(Belum Diatur)</b> Semester: <b class="text-danger">(Belum Diatur)</b></h3>
+          @else
+            <h3>Plotting Guru Tahun : <b class="text-primary">{{ $thnAktif->tahun_ajaran }}</b> Semester: <b class="text-primary">{{ $thnAktif->semester }}</b></h3>
+          @endif
           <p class="text-subtitle text-muted">plotting guru yang mengajar di setiap kelas dan mata pelajaran.</p>
         </div>
       </div>

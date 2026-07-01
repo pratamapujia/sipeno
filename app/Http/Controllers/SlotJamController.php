@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\SlotJamImport;
 use App\Models\SlotJam;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException;
 use Vinkla\Hashids\Facades\Hashids;
 
 class SlotJamController extends Controller
@@ -115,5 +118,41 @@ class SlotJamController extends Controller
         $slot = SlotJam::findOrFail($id);
         $slot->delete();
         return redirect()->route('admin.m.slotJam.index')->with('success', 'Slot Jam ke-' . $slot->slot_number . ' berhasil dihapus');
+    }
+
+    public function import(Request $request)
+    {
+        // 1. Validasi File
+        $request->validate([
+            'file_excel' => 'required|mimes:xlsx,xls|max:2048',
+        ], [
+            'file_excel.required' => 'File Excel wajib diunggah.',
+            'file_excel.mimes'    => 'Format file harus .xlsx, atau .xls',
+            'file_excel.max'      => 'Ukuran file maksimal adalah 2MB.',
+        ]);
+
+        try {
+            Excel::import(new SlotJamImport, $request->file('file_excel'));
+
+            return redirect()->route('admin.m.slotJam.index')
+                ->with('success', 'Data Slot Jam berhasil diimpor!');
+        } catch (ValidationException $e) {
+            // MENANGKAP ERROR VALIDASI ISI EXCEL
+            $failures = $e->failures();
+            $errorMessages = [];
+
+            // Loop untuk mengumpulkan pesan error beserta nomor barisnya
+            foreach ($failures as $failure) {
+                $baris = $failure->row();
+                $pesanError = implode(', ', $failure->errors());
+                $errorMessages[] = "Baris ke-{$baris}: {$pesanError}";
+            }
+
+            return redirect()->back()->withErrors($errorMessages);
+        } catch (\Exception $e) {
+            // Menangkap error umum lainnya
+            return redirect()->back()
+                ->withErrors(['Gagal memproses file: ' . $e->getMessage()]);
+        }
     }
 }

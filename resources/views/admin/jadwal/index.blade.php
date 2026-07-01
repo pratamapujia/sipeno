@@ -37,8 +37,8 @@
     @if (session('warning_banyak'))
       <div class="alert alert-light-warning alert-dismissible show fade mt-3">
         <h6><i class="fas fa-exclamation-triangle me-2"></i> Simulasi Selesai Dengan Catatan:</h6>
-        <p class="small mb-2">Algoritma tidak menemukan kombinasi 100% sempurna. Data tetap disimpan sebagai <b>Draft</b>. Silakan lakukan penyesuaian manual pada rincian berikut:</p>
-        <ul class="mb-0 text-sm">
+        <p class="small mb-2 text-dark">Algoritma tidak menemukan kombinasi 100% sempurna. Data tetap disimpan sebagai <b>Draft</b>. Silakan lakukan penyesuaian manual pada rincian berikut:</p>
+        <ul class="mb-0 text-sm text-dark">
           @foreach (session('warning_banyak') as $warnMsg)
             <li>{!! $warnMsg !!}</li>
           @endforeach
@@ -112,7 +112,7 @@
                     @if ($batch->status != 'active')
                       <form action="{{ route('admin.jadwal.activate', $batch->id) }}" method="POST" class="d-inline">
                         @csrf
-                        <button type="submit" class="btn btn-sm btn-success icon icon-left btn-gunakan">
+                        <button type="button" class="btn btn-sm btn-success icon icon-left btn-konfirmasi" data-nama="{{ $batch->nama }}" data-action="activate">
                           <i class="fas fa-check"></i> Gunakan
                         </button>
                       </form>
@@ -121,7 +121,7 @@
                     <form action="{{ route('admin.jadwal.destroy', $batch->id) }}" method="POST" class="d-inline">
                       @csrf
                       @method('DELETE')
-                      <button type="button" class="btn icon btn-danger btn-sm btn-hapus" data-nama="{{ $batch->name }}">
+                      <button type="button" class="btn icon btn-danger btn-sm btn-konfirmasi" data-nama="{{ $batch->nama }}" data-action="delete">
                         <i class="fas fa-trash"></i>
                       </button>
                     </form>
@@ -165,46 +165,63 @@
       });
     });
 
-    document.querySelectorAll('.btn-hapus').forEach(button => {
-      button.addEventListener('click', function() {
-        const form = this.closest('form');
-        const nama = this.dataset.nama;
-        Swal.fire({
-          title: "Hapus Simulasi?",
-          html: `Data jadwal <b class="text-primary">${nama}</b> beserta rinciannya akan dihapus permanen.`,
-          icon: "warning",
-          showCancelButton: true,
-          confirmButtonColor: "#435ebe",
-          cancelButtonColor: "#dc3545",
-          confirmButtonText: "Ya, Hapus",
-          preConfirm: () => form.submit()
-        });
-      });
-    });
+    document.addEventListener('DOMContentLoaded', function() {
 
-    document.querySelectorAll('.btn-gunakan').forEach(button => {
-      button.addEventListener('click', function() {
-        const form = this.closest('form');
-        const nama = this.dataset.nama;
-        Swal.fire({
-          title: "Gunakan Simulasi?",
-          html: `Data jadwal <b class="text-primary">${nama}</b> beserta rinciannya akan diset sebagai jadwal utama.`,
-          icon: "info",
-          showCancelButton: true,
-          confirmButtonColor: "#435ebe",
-          cancelButtonColor: "#dc3545",
-          confirmButtonText: "Ya, Gunakan",
-          showLoaderOnConfirm: true,
-          allowOutsideClick: () => !Swal.isLoading(),
-          preConfirm: () => {
-            // Mengubah teks tombol saat proses berjalan agar user tahu sistem tidak hang
-            Swal.getConfirmButton().textContent = 'Sedang Memproses...';
-            return new Promise((resolve) => {
-              form.submit();
-            });
+      const btnKonfirmasi = document.querySelectorAll('.btn-konfirmasi');
+
+      btnKonfirmasi.forEach(button => {
+        button.addEventListener('click', function() {
+          const form = this.closest('form');
+          const nama = this.getAttribute('data-nama');
+          const action = this.getAttribute('data-action'); // Mengambil tipe aksi ('activate' atau 'delete')
+
+          // 1. Setup Variabel Default (Untuk Activate)
+          let swalTitle = 'Konfirmasi Aktivasi';
+          let swalText = `Apakah Anda yakin ingin menggunakan jadwal "${nama}" sebagai jadwal utama ?`;
+          let swalIcon = 'question';
+          let btnColor = '#28a745'; // Hijau
+          let btnText = 'Ya, Gunakan!';
+          let loadingText = 'Memproses...';
+
+          // 2. Ubah Variabel jika aksinya adalah 'delete'
+          if (action === 'delete') {
+            swalTitle = 'Konfirmasi Hapus';
+            swalText = `Apakah Anda yakin ingin menghapus jadwal "${nama}" secara permanen?`;
+            swalIcon = 'warning';
+            btnColor = '#d33'; // Merah
+            btnText = 'Ya, Hapus!';
+            loadingText = 'Menghapus...';
           }
+
+          // 3. Panggil SweetAlert dengan variabel dinamis
+          Swal.fire({
+            title: swalTitle,
+            text: swalText,
+            icon: swalIcon,
+            showCancelButton: true,
+            confirmButtonColor: btnColor,
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: btnText,
+            cancelButtonText: 'Batal'
+          }).then((result) => {
+            if (result.isConfirmed) {
+              // Munculkan Loading
+              Swal.fire({
+                title: loadingText,
+                html: 'Mohon tunggu sebentar.',
+                allowOutsideClick: false,
+                didOpen: () => {
+                  Swal.showLoading();
+                }
+              });
+
+              // Submit form
+              form.submit();
+            }
+          });
         });
       });
+
     });
   </script>
 @endsection

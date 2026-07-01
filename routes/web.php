@@ -28,6 +28,8 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:admin'])->group(function () {
 
         Route::get('/admin', [DashboardController::class, 'adminDashboard'])->name('admin.dashboard');
+
+        // Data Master
         Route::prefix('admin/m')->name('admin.m.')->group(function () {
             Route::resource('guru', GuruController::class);
             Route::resource('mapel', MapelController::class);
@@ -35,20 +37,23 @@ Route::middleware(['auth'])->group(function () {
             Route::resource('thnAjaran', TahunAjaranController::class);
             Route::resource('slotJam', SlotJamController::class);
             // Route::resource('ruangan', RuanganController::class);
+
             // Import Route
             Route::post('guru/import', [GuruController::class, 'import'])->name('guru.import');
             Route::post('mapel/import', [MapelController::class, 'import'])->name('mapel.import');
             Route::post('kelas/import', [KelasController::class, 'import'])->name('kelas.import');
+            Route::post('slotJam/import', [SlotJamController::class, 'import'])->name('slotJam.import');
         });
 
+        // Plotting Guru
         Route::prefix('admin')->name('admin.')->group(function () {
-            // Penjadwalan
             Route::resource('plotting', GuruMapelController::class)->except(['show']);
             Route::get('guruFree', [GuruFreeController::class, 'index'])->name('guruFree.index');
             Route::get('guruFree/rekap', [GuruFreeController::class, 'rekap'])->name('guruFree.rekap');
             Route::post('guruFree', [GuruFreeController::class, 'store'])->name('guruFree.store');
         });
 
+        // Jadwal Guru
         Route::prefix('admin/jadwal')->name('admin.jadwal.')->group(function () {
             Route::get('/', [GeneticScheduleController::class, 'index'])->name('index');
             Route::post('/generate', [GeneticScheduleController::class, 'generate'])->name('generate');

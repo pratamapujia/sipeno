@@ -31,7 +31,7 @@
           <li class="sidebar-item {{ request()->is('admin/m/mapel', 'admin/m/mapel/*') ? 'active' : '' }}">
             <a href="{{ route('admin.m.mapel.index') }}" class='sidebar-link'>
               <i class="bi bi-journal-bookmark-fill"></i>
-              <span>Mata Pelajaran</span>
+              <span>Data Mapel</span>
             </a>
           </li>
           <li class="sidebar-item {{ request()->is('admin/m/kelas', 'admin/m/kelas/*') ? 'active' : '' }}">
@@ -49,7 +49,7 @@
           <li class="sidebar-item {{ request()->is('admin/m/slotJam', 'admin/m/slotJam/*') ? 'active' : '' }}">
             <a href="{{ route('admin.m.slotJam.index') }}" class='sidebar-link'>
               <i class="bi bi-clock"></i>
-              <span>Slot Jam</span>
+              <span>Jam Pelajaran</span>
             </a>
           </li>
           <li class="sidebar-item {{ request()->is('admin/m/thnAjaran', 'admin/m/thnAjaran/*') ? 'active' : '' }} ">
@@ -68,7 +68,7 @@
           <li class="sidebar-item {{ request()->is('admin/guruFree', 'admin/guruFree/*') ? 'active' : '' }} ">
             <a href="{{ route('admin.guruFree.index') }}" class='sidebar-link'>
               <i class="bi bi-file-lock2"></i>
-              <span>Atur Jadwal</span>
+              <span>Berhalangan Mengajar</span>
             </a>
           </li>
           <li class="sidebar-item {{ request()->is('admin/jadwal', 'admin/jadwal/*') ? 'active' : '' }}">

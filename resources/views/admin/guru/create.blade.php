@@ -45,7 +45,7 @@
         <form action="{{ route('admin.m.guru.store') }}" class="form" method="POST">
           @csrf
           <div class="row">
-            <div class="col-sm-12 col-md-4">
+            {{-- <div class="col-sm-12 col-md-4">
               <div class="form-group">
                 <label class="form-label" for="nip">NIP (Optional)</label>
                 <input type="number" class="form-control @error('nip') is-invalid @enderror" name="nip" placeholder="Masukkan NIP" value="{{ old('nip') }}">
@@ -55,8 +55,8 @@
                   </div>
                 @enderror
               </div>
-            </div>
-            <div class="col-sm-12 col-md-4">
+            </div> --}}
+            <div class="col-sm-12 col-md-6">
               <div class="form-group">
                 <label class="form-label" for="nama_guru">Nama Guru</label>
                 <input type="text" class="form-control @error('nama_guru') is-invalid @enderror" name="nama_guru" placeholder="Masukkan Nama" value="{{ old('nama_guru') }}">
@@ -67,7 +67,7 @@
                 @enderror
               </div>
             </div>
-            <div class="col-sm-12 col-md-4">
+            <div class="col-sm-12 col-md-6">
               <div class="form-group">
                 <label class="form-label" for="email">Email Guru</label>
                 <input type="email" class="form-control @error('email') is-invalid @enderror" name="email" placeholder="Masukkan Email" value="{{ old('email') }}">
