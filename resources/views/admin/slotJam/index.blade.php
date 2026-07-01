@@ -138,10 +138,13 @@
       btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sedang Memproses...';
     });
 
-    document.querySelectorAll('.btn-hapus').forEach(button => {
-      button.addEventListener('click', function() {
-        const form = this.closest('form');
-        const nama = this.dataset.nama;
+    document.addEventListener('click', function(e) {
+      const button = e.target.closest('.btn-hapus');
+      if (button) {
+        e.preventDefault();
+        const form = button.closest('form');
+        const nama = button.dataset.nama;
+
         Swal.fire({
           title: "Peringatan!!!",
           html: `Data <b class="text-primary">${nama}</b> akan dihapus secara <b class="text-danger">Permanen</b>`,
@@ -150,9 +153,14 @@
           confirmButtonColor: "#435ebe",
           cancelButtonColor: "#dc3545",
           confirmButtonText: "Ya, Hapus",
-          preConfirm: () => form.submit()
+          showLoaderOnConfirm: true,
+          preConfirm: () => {
+            return new Promise((resolve) => {
+              form.submit();
+            });
+          },
         });
-      });
+      }
     });
   </script>
 @endsection

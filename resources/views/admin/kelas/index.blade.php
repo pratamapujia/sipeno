@@ -79,7 +79,7 @@
                     <form action="{{ route('admin.m.kelas.destroy', $data->id) }}" method="POST" class="d-inline">
                       @csrf
                       @method('DELETE')
-                      <button type="button" class="btn icon icon-left btn-danger btn-sm btn-hapus" data-nama="Kelas {{ $data->kelas }}">
+                      <button type="button" class="btn icon icon-left btn-danger btn-sm btn-hapus" data-nama="Kelas {{ $data->nama_kelas }}">
                         <i class="fas fa-trash"></i> Hapus
                       </button>
                     </form>
@@ -142,14 +142,15 @@
       btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Sedang Memproses...';
     });
     // Alert Delete
-    document.querySelectorAll('.btn-hapus').forEach(button => {
-      button.addEventListener('click', function() {
-        const form = this.closest('form');
-        const nama = this.dataset.nama;
+    document.addEventListener('click', function(e) {
+      const button = e.target.closest('.btn-hapus');
+      if (button) {
+        e.preventDefault();
+        const form = button.closest('form');
+        const nama = button.dataset.nama;
 
         Swal.fire({
           title: "Peringatan!!!",
-          // text: "Data ini akan dihapus secara permanen!",
           html: `Data <b class="text-primary">${nama}</b> akan dihapus secara <b class="text-danger">Permanen</b>`,
           icon: "warning",
           showCancelButton: true,
@@ -163,7 +164,7 @@
             });
           },
         });
-      });
+      }
     });
   </script>
 @endsection
