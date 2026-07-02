@@ -15,23 +15,30 @@
              <div class="user-menu d-flex">
                <div class="user-name text-end me-3">
                  <h6 class="mb-0 text-gray-600">{{ Auth::user()->name }}</h6>
-                 @if (Auth::user()->hasRole('admin') == 'admin')
+                 @role('admin')
                    <p class="mb-0 text-sm text-gray-600">Waka Kurikulum</p>
-                 @elseif (Auth::user()->hasRole('guru') == 'guru')
-                   <p class="mb-0 text-sm text-gray-600">Guru</p>
-                 @else
+                 @endrole
+                 @role('kepsek')
                    <p class="mb-0 text-sm text-gray-600">Kepala Sekolah</p>
-                 @endif
+                 @endrole
+                 @role('guru')
+                   <p class="mb-0 text-sm text-gray-600">Guru</p>
+                 @endrole
                </div>
                <div class="user-img d-flex align-items-center">
                  <div class="avatar avatar-md">
-                   <img src="https://ui-avatars.com/api/?name={{ Auth::user()->name }}">
+                   <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}" alt="Avatar">
                  </div>
                </div>
              </div>
            </a>
            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdownMenuButton" style="min-width: 11rem;">
-             </li>
+             @role('guru')
+               <li><a class="dropdown-item" href="{{ route('guru.profile') }}"><i class="icon-mid bi bi-person me-2"></i> My Profile</a></li>
+               <li>
+                 <hr class="dropdown-divider">
+               </li>
+             @endrole
              <li><a class="dropdown-item text-danger" href="{{ route('logout') }}"><i class="icon-mid bi bi-box-arrow-left me-2"></i> Logout</a></li>
            </ul>
          </div>

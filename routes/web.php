@@ -12,6 +12,7 @@ use App\Http\Controllers\JadwalGuruController;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\LaporanJadwalController;
 use App\Http\Controllers\MapelController;
+use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SlotJamController;
 use App\Http\Controllers\TahunAjaranController;
 use Illuminate\Support\Facades\Route;
@@ -92,8 +93,11 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['role:guru'])->prefix('guru')->name('guru.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'guruDashboard'])->name('dashboard');
         Route::get('/jadwal-saya', [JadwalGuruController::class, 'index'])->name('jadwal.saya');
-        //Print Route
         Route::get('/jadwal-saya/print', [JadwalGuruController::class, 'print'])->name('jadwal.print');
+
+        // Profile
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile');
+        Route::put('/profile/password', [ProfileController::class, 'update'])->name('profile.update');
     });
 
     // Kepsek Role

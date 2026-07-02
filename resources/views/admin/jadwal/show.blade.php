@@ -5,7 +5,7 @@
 @endsection
 
 @section('main')
-  {{-- Wadah Flash Data untuk SweetAlert (TAMBAHKAN DI SINI) --}}
+  {{-- Wadah Flash Data untuk SweetAlert --}}
   <div class="flash-data" data-berhasil="{{ Session::get('success') }}"></div>
   <div class="flash-data" data-gagal="{{ Session::get('error') }}"></div>
   <div class="page-heading">
@@ -15,9 +15,9 @@
           <h3>Pratinjau Jadwal Kelas</h3>
           <p class="text-muted">Simulasi: <b class="text-primary">{{ $batch->nama }}</b>
             @if ($batch->status == 'active')
-              <span class="badge bg-success ms-2">AKTIF</span>
+              <span class="badge bg-success ms-2"><i class="fas fa-lock me-1"></i> AKTIF</span>
             @else
-              <span class="badge bg-secondary ms-2">DRAFT</span>
+              <span class="badge bg-secondary ms-2"><i class="fas fa-edit me-1"></i> DRAFT</span>
             @endif
           </p>
         </div>
@@ -82,7 +82,7 @@
       @foreach ($shiftGroups as $shiftKey => $shift)
         @if ($shift['data']->count() > 0)
           <div class="card shadow-sm mb-4">
-            <div class="card-header bg-light-{{ $shiftKey == 'Pagi' ? 'warning' : 'info' }} p-3 border-bottom">
+            <div class="card-header bg-light-secondary p-3 border-bottom">
               <h5 class="mb-0"><i class="{{ $shift['icon'] }} me-2"></i> {{ $shift['title'] }}</h5>
             </div>
             <div class="card-body p-0">
@@ -100,14 +100,14 @@
                     @foreach ($shift['data'] as $slot)
                       <tr class="{{ $slot->is_istirahat ? 'table-warning' : '' }}">
                         <td>
-                          <b class="text-nowrap">Jam ke-{{ $slot->slot_number }}</b><br>
+                          <b class="text-nowrap text-dark">Jam ke-{{ $slot->slot_number }}</b><br>
                           <small class="text-muted text-nowrap">{{ substr($slot->start_time, 0, 5) }} - {{ substr($slot->end_time, 0, 5) }}</small>
                         </td>
 
                         @foreach ($days as $day)
                           <td>
                             @if ($slot->is_istirahat)
-                              <span class="text-muted font-italic"><i class="fas fa-coffee me-1"></i> ISTIRAHAT</span>
+                              <small class="text-muted font-italic"><i class="fas fa-coffee me-1"></i> ISTIRAHAT</small>
                             @else
                               @if (isset($jadwalMatrix[$slot->id][$day]))
                                 @php $s = $jadwalMatrix[$slot->id][$day]; @endphp
@@ -115,64 +115,68 @@
                                 <div class="card mb-0 shadow-sm border">
                                   <div class="card-body p-2 text-center">
                                     <span class="fw-bold d-block text-primary">{{ $s->mapel->nama_mapel }}</span>
-                                    <small class="text-muted d-block">{{ $s->guru->nama_guru }}</small>
+                                    <small class="text-dark d-block">{{ ucwords(strtolower($s->guru->nama_guru)) }}</small>
 
-                                    {{-- Tombol Edit --}}
-                                    <button class="btn btn-sm btn-light-secondary mt-2 w-100" data-bs-toggle="modal" data-bs-target="#editModal{{ $s->id }}">
-                                      <i class="fas fa-edit"></i> Pindah
-                                    </button>
+                                    {{-- Tombol Edit HANYA muncul jika status BUKAN active --}}
+                                    @if ($batch->status != 'active')
+                                      <button class="btn btn-sm btn-light-secondary mt-2 w-100" data-bs-toggle="modal" data-bs-target="#editModal{{ $s->id }}">
+                                        <i class="fas fa-edit"></i> Pindah
+                                      </button>
+                                    @endif
                                   </div>
                                 </div>
 
-                                {{-- Modal Edit Khusus untuk Item Ini --}}
-                                <div class="modal fade text-left" id="editModal{{ $s->id }}" tabindex="-1" role="dialog" aria-hidden="true">
-                                  <div class="modal-dialog modal-dialog-centered" role="document">
-                                    <div class="modal-content">
-                                      <div class="modal-header bg-primary">
-                                        <h5 class="modal-title white">Pindah Jadwal Manual</h5>
-                                        <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                          <i data-feather="x"></i>
-                                        </button>
+                                {{-- Modal Edit HANYA dirender jika status BUKAN active --}}
+                                @if ($batch->status != 'active')
+                                  <div class="modal fade text-left" id="editModal{{ $s->id }}" tabindex="-1" role="dialog" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered" role="document">
+                                      <div class="modal-content">
+                                        <div class="modal-header bg-primary">
+                                          <h5 class="modal-title white">Pindah Jadwal Manual</h5>
+                                          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                                            <i data-feather="x"></i>
+                                          </button>
+                                        </div>
+                                        <form action="{{ route('admin.jadwal.updateManual', $s->id) }}" method="POST">
+                                          @csrf
+                                          @method('PUT')
+                                          <div class="modal-body text-start">
+                                            <div class="alert alert-info">
+                                              Memindahkan <b>{{ $s->mapel->nama_mapel }}</b> ({{ $s->guru->nama_guru }}) dari <b>{{ $s->day }} Jam ke-{{ $s->slotJam->slot_number }}</b>.
+                                            </div>
+
+                                            <div class="form-group">
+                                              <label class="fw-bold">Pindah ke Hari:</label>
+                                              <select name="day" class="form-select" required>
+                                                @foreach ($days as $d)
+                                                  <option value="{{ $d }}" {{ $s->day == $d ? 'selected' : '' }}>{{ $d }}</option>
+                                                @endforeach
+                                              </select>
+                                            </div>
+
+                                            <div class="form-group mt-3">
+                                              <label class="fw-bold">Pindah ke Jam Ke-:</label>
+                                              <select name="time_slot_id" class="form-select" required>
+                                                @foreach ($slots as $slotItem)
+                                                  <option value="{{ $slotItem->id }}" {{ $s->time_slot_id == $slotItem->id ? 'selected' : '' }}>
+                                                    Jam ke-{{ $slotItem->slot_number }} ({{ substr($slotItem->start_time, 0, 5) }} - {{ substr($slotItem->end_time, 0, 5) }})
+                                                    @if ($slotItem->is_istirahat)
+                                                      [ISTIRAHAT]
+                                                    @endif
+                                                  </option>
+                                                @endforeach
+                                              </select>
+                                            </div>
+                                          </div>
+                                          <div class="modal-footer">
+                                            <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Batal</button>
+                                            <button type="submit" class="btn btn-primary ml-1">Simpan Perubahan</button>
+                                          </div>
+                                        </form>
                                       </div>
-                                      <form action="{{ route('admin.jadwal.updateManual', $s->id) }}" method="POST">
-                                        @csrf
-                                        @method('PUT')
-                                        <div class="modal-body text-start">
-                                          <div class="alert alert-info">
-                                            Memindahkan <b>{{ $s->mapel->nama_mapel }}</b> ({{ $s->guru->nama_guru }}) dari <b>{{ $s->day }} Jam ke-{{ $s->slotJam->slot_number }}</b>.
-                                          </div>
-
-                                          <div class="form-group">
-                                            <label class="fw-bold">Pindah ke Hari:</label>
-                                            <select name="day" class="form-select" required>
-                                              @foreach ($days as $d)
-                                                <option value="{{ $d }}" {{ $s->day == $d ? 'selected' : '' }}>{{ $d }}</option>
-                                              @endforeach
-                                            </select>
-                                          </div>
-
-                                          <div class="form-group mt-3">
-                                            <label class="fw-bold">Pindah ke Jam Ke-:</label>
-                                            <select name="time_slot_id" class="form-select" required>
-                                              @foreach ($slots as $slotItem)
-                                                <option value="{{ $slotItem->id }}" {{ $s->time_slot_id == $slotItem->id ? 'selected' : '' }}>
-                                                  Jam ke-{{ $slotItem->slot_number }} ({{ substr($slotItem->start_time, 0, 5) }} - {{ substr($slotItem->end_time, 0, 5) }})
-                                                  @if ($slotItem->is_istirahat)
-                                                    [ISTIRAHAT]
-                                                  @endif
-                                                </option>
-                                              @endforeach
-                                            </select>
-                                          </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                          <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Batal</button>
-                                          <button type="submit" class="btn btn-primary ml-1">Simpan Perubahan</button>
-                                        </div>
-                                      </form>
                                     </div>
                                   </div>
-                                </div>
+                                @endif
                               @else
                                 {{-- Jika kosong --}}
                                 <div class="text-center text-muted p-3">-Kosong-</div>
@@ -195,6 +199,7 @@
 @endsection
 
 @section('script')
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       // Membaca flash data dari Controller

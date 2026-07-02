@@ -94,7 +94,7 @@
 
         {{-- Menu Untuk Guru --}}
         @role('guru')
-          <li class="sidebar-item {{ request()->is('guru/dashboard') ? 'active' : '' }} ">
+          <li class="sidebar-item {{ request()->is('guru/dashboard', 'guru/profile') ? 'active' : '' }} ">
             <a href="{{ route('guru.dashboard') }}" class='sidebar-link'>
               <i class="bi bi-grid-fill"></i>
               <span>Dashboard Guru</span>
