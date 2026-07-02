@@ -11,12 +11,12 @@
 
     <style>
       body {
-        font-size: 11px !important;
+        font-size: 13px !important;
         background-color: #fff;
       }
 
       .page-break {
-        page-break-after: always;
+        page-break-before: always;
       }
 
       .table-bw {
@@ -28,7 +28,7 @@
       .table-bw th,
       .table-bw td {
         border: 2px solid #000 !important;
-        padding: 6px 10px;
+        padding: 8px 10px;
         vertical-align: middle;
         color: #000 !important;
       }
@@ -77,9 +77,12 @@
         <img src="{{ asset('assets/static/images/kop-print.png') }}" alt="Kop Surat SMK PGRI 1 Sidoarjo" class="img-fluid w-100">
       </div>
 
-      <div class="text-center mb-3 text-black">
-        <h5 class="fw-bold text-uppercase mb-1" style="color: #000;">JADWAL PELAJARAN KELAS {{ $kelas->nama_kelas }}</h5>
-        <p class="small mb-0">Periode Rilis: {{ $activeBatch->nama }}</p>
+      <div class="text-center mt-2">
+        <h4 class="fw-bold text-uppercase text-dark">Jadwal Pelajaran Kelas {{ $kelas->nama_kelas }}</h4>
+        <div class="d-flex justify-content-between mt-5 text-start">
+          <p><b>Tahun Ajaran:</b> {{ $academicYear->tahun_ajaran }} <br> <b>Semester:</b> {{ $academicYear->semester }}</p>
+          <p><b>Wali Kelas:</b> {{ $kelas->waliKelas->nama_guru ?? 'Belum diatur' }}</p>
+        </div>
       </div>
 
       <div class="table-responsive">
@@ -88,8 +91,9 @@
             <tr>
               <th style="width: 15%;">Hari</th>
               <th style="width: 15%;">Jam Ke-</th>
-              <th style="width: 35%;">Mata Pelajaran</th>
-              <th style="width: 35%;">Guru Pengajar</th>
+              <th style="width: 20%;">Waktu</th>
+              <th style="width: 25%;">Mata Pelajaran</th>
+              <th style="width: 25%;">Guru Pengajar</th>
             </tr>
           </thead>
           <tbody>
@@ -106,7 +110,8 @@
                       <td class="fw-bold" rowspan="{{ $rowspan }}">{{ $day }}</td>
                     @endif
 
-                    <td class="fw-bold">{{ $j->slotJam->slot_number }}</td>
+                    <td class="fw-bold">Jam ke-{{ $j->slotJam->slot_number }}</td>
+                    <td>{{ substr($j->slotJam->start_time, 0, 5) }} - {{ substr($j->slotJam->end_time, 0, 5) }}</td>
                     <td class="fw-bold">{{ $j->mapel->nama_mapel }}</td>
                     <td>{{ $j->guru->nama_guru }}</td>
                   </tr>
@@ -114,7 +119,7 @@
               @else
                 <tr>
                   <td class="fw-bold">{{ $day }}</td>
-                  <td colspan="3" class="fst-italic text-center">Kosong / Libur</td>
+                  <td colspan="4" class="fst-italic text-center">Tidak ada jadwal kelas / Libur</td>
                 </tr>
               @endif
             @endforeach

@@ -40,7 +40,7 @@
                         <option value="">-- Pilih Guru --</option>
                         @foreach ($guru as $guru)
                           <option value="{{ $guru->id }}" {{ old('guru_id') == $guru->id ? 'selected' : '' }}>
-                            {{ $guru->nama_guru }} {{ $guru->nip ? '(' . $guru->nip . ')' : '' }}
+                            {{ $guru->nama_guru }}
                           </option>
                         @endforeach
                       </select>

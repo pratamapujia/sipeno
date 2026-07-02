@@ -4,7 +4,7 @@
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cetak Jadwal Kelas - {{ $kelas->nama_kelas }}</title>
+    <title>Cetak Jadwal Kelas {{ $kelas->nama_kelas }}</title>
 
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/extensions/@fortawesome/fontawesome-free/css/all.min.css') }}">
@@ -72,10 +72,12 @@
       <img src="{{ asset('assets/static/images/kop-print.png') }}" alt="Kop Surat SMK PGRI 1 Sidoarjo" class="img-fluid w-100">
     </div>
 
-    <div class="text-center mb-4 text-black">
-      <h4 class="fw-bold text-uppercase mb-1" style="color: #000;">Jadwal Pelajaran Kelas {{ $kelas->nama_kelas }}</h4>
-      <p class="mb-0" style="color: #000;">Tahun Ajaran: <b>{{ $academicYear->tahun_ajaran }}</b> | Semester: <b>{{ $academicYear->semester }}</b></p>
-      <small>Simulasi Batch: {{ $activeBatch->nama }}</small>
+    <div class="text-center mt-2">
+      <h4 class="fw-bold text-uppercase text-dark">Jadwal Pelajaran Kelas {{ $kelas->nama_kelas }}</h4>
+      <div class="d-flex justify-content-between mt-5 text-start">
+        <p><b>Tahun Ajaran:</b> {{ $academicYear->tahun_ajaran }} <br> <b>Semester:</b> {{ $academicYear->semester }}</p>
+        <p><b>Wali Kelas:</b> {{ $kelas->waliKelas->nama_guru ?? 'Belum diatur' }}</p>
+      </div>
     </div>
 
     <div class="table-responsive">

@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['nama_kelas', 'tingkat'])]
+#[Fillable(['wali_kelas_id', 'nama_kelas', 'tingkat'])]
 #[Table('classes', key: 'id')]
 class Kelas extends Model
 {
@@ -22,5 +22,10 @@ class Kelas extends Model
     public function jadwal(): HasMany
     {
         return $this->hasMany(Jadwal::class);
+    }
+
+    public function waliKelas()
+    {
+        return $this->belongsTo(Guru::class, 'wali_kelas_id');
     }
 }

@@ -63,6 +63,7 @@
                 <th>No</th>
                 <th>Tingkat</th>
                 <th>Nama Kelas</th>
+                <th>Nama Wali Kelas</th>
                 <th data-sortable="false">Aksi</th>
               </tr>
             </thead>
@@ -72,6 +73,13 @@
                   <td>{{ $loop->iteration }}</td>
                   <td>{{ $data->tingkat }}</td>
                   <td>{{ $data->nama_kelas }}</td>
+                  <td>
+                    @if ($data->wali_kelas_id == null)
+                      <small class="badge bg-danger">Belum ditentukan</small>
+                    @else
+                      {{ $data->waliKelas->nama_guru }}
+                    @endif
+                  </td>
                   <td>
                     <a href="{{ route('admin.m.kelas.edit', Hashids::encode($data->id)) }}" class="btn icon icon-left btn-sm btn-warning">
                       <i class="fas fa-edit"></i> Edit

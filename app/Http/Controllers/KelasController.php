@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Imports\KelasImport;
+use App\Models\Guru;
 use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
@@ -26,7 +27,8 @@ class KelasController extends Controller
      */
     public function create()
     {
-        return view('admin.kelas.create');
+        $guru = Guru::all();
+        return view('admin.kelas.create', compact('guru'));
     }
 
     /**
@@ -37,12 +39,14 @@ class KelasController extends Controller
         $validasi = Validator::make($request->all(), [
             'nama_kelas' => 'required|min:3|unique:classes,nama_kelas',
             'tingkat' => 'required|numeric',
+            'wali_kelas_id' => 'nullable|exists:teachers,id',
         ], [
             'nama_kelas.required' => 'Kelas harus diisi',
             'nama_kelas.min' => 'Kelas minimal 3 karakter',
             'nama_kelas.unique' => 'Kelas sudah ada',
             'tingkat.required' => 'Tingkat harus diisi',
             'tingkat.numeric' => 'Tingkat harus angka',
+            'wali_kelas_id.exists' => 'Wali kelas yang dipilih tidak valid',
         ]);
 
         if ($validasi->fails()) {
@@ -73,7 +77,8 @@ class KelasController extends Controller
         }
 
         $kelas = Kelas::findOrFail($id);
-        return view('admin.kelas.edit', compact('kelas'));
+        $guru = Guru::all();
+        return view('admin.kelas.edit', compact('kelas', 'guru'));
     }
 
     /**
@@ -84,12 +89,14 @@ class KelasController extends Controller
         $validasi = Validator::make($request->all(), [
             'nama_kelas' => 'required|min:3|unique:classes,nama_kelas,' . $id,
             'tingkat' => 'required|numeric',
+            'wali_kelas_id' => 'nullable|exists:teachers,id',
         ], [
             'nama_kelas.required' => 'Kelas harus diisi',
             'nama_kelas.min' => 'Kelas minimal 3 karakter',
             'nama_kelas.unique' => 'Kelas sudah ada',
             'tingkat.required' => 'Tingkat harus diisi',
             'tingkat.numeric' => 'Tingkat harus angka',
+            'wali_kelas_id.exists' => 'Wali kelas yang dipilih tidak valid',
         ]);
 
         if ($validasi->fails()) {

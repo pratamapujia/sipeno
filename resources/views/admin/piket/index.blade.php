@@ -16,9 +16,14 @@
   <div class="page-heading">
     <div class="page-title">
       <div class="row">
-        <div class="col-12 col-md-6">
-          <h3>Manajemen Guru Piket</h3>
-          <p class="text-subtitle text-muted">Atur penugasan guru piket per hari. Guru piket tidak boleh memiliki jadwal mengajar pada hari tugasnya.</p>
+        <div class="col-12">
+          {{-- if null tahun ajaran --}}
+          @if (!$activeYear)
+            <h3>Manajemen Guru Piket Tahun : <b class="text-danger">(Belum Diatur)</b> Semester: <b class="text-danger">(Belum Diatur)</b></h3>
+          @else
+            <h3>Manajemen Guru Piket Tahun : <b class="text-primary">{{ $activeYear->tahun_ajaran }}</b> Semester: <b class="text-primary">{{ $activeYear->semester }}</b></h3>
+          @endif
+          <p class="text-subtitle text-muted">Atur guru piket untuk tiap hari.</p>
         </div>
       </div>
     </div>
@@ -27,10 +32,6 @@
       @if (!$activeYear)
         <div class="alert alert-warning shadow-sm"><i class="fas fa-exclamation-triangle"></i> Belum ada Tahun Ajaran yang berstatus <b>Aktif</b>.</div>
       @else
-        <div class="alert alert-success shadow-sm mb-4">
-          <i class="fas fa-check-circle me-2"></i> Tahun Ajaran Aktif saat ini: <b>{{ $activeYear->tahun_ajaran }} - {{ $activeYear->semester }}</b>
-        </div>
-
         <div class="card shadow-sm">
           <div class="card-header border-bottom d-flex justify-content-between align-items-center">
             <button type="button" class="btn icon icon-left btn-primary" data-bs-toggle="modal" data-bs-target="#modalTambahPiket">

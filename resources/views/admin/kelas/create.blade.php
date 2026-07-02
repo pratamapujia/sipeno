@@ -45,7 +45,23 @@
         <form action="{{ route('admin.m.kelas.store') }}" class="form" method="POST">
           @csrf
           <div class="row">
-            <div class="col-sm-12 col-md-6">
+            <div class="col-sm-12 col-md-4">
+              <div class="form-group">
+                <label for="wali_kelas_id" class="fw-bold mb-1">Pilih Wali Kelas</label>
+                <select name="wali_kelas_id" id="wali_kelas_id" class="form-select @error('wali_kelas_id') is-invalid @enderror">
+                  <option value="">-- Pilih Wali Kelas --</option>
+                  @foreach ($guru as $g)
+                    <option value="{{ $g->id }}" {{ old('wali_kelas_id') == $g->id ? 'selected' : '' }}>
+                      {{ $g->nama_guru }}
+                    </option>
+                  @endforeach
+                </select>
+                @error('wali_kelas_id')
+                  <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+              </div>
+            </div>
+            <div class="col-sm-12 col-md-4">
               <div class="form-group">
                 <label class="form-label" for="nama_kelas">Nama Kelas</label>
                 <input type="text" class="form-control @error('nama_kelas') is-invalid @enderror" name="nama_kelas" placeholder="Masukkan Nama Kelas" value="{{ old('nama_kelas') }}">
@@ -56,7 +72,7 @@
                 @enderror
               </div>
             </div>
-            <div class="col-sm-12 col-md-6">
+            <div class="col-sm-12 col-md-4">
               <div class="form-group">
                 <label class="form-label" for="tingkat">Tingkat</label>
                 <input type="number" class="form-control @error('tingkat') is-invalid @enderror" name="tingkat" placeholder="Masukkan Tingkat" value="{{ old('tingkat') }}">

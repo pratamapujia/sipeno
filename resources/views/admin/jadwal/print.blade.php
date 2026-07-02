@@ -131,10 +131,12 @@
       </div>
 
       {{-- HEADER DOKUMEN --}}
-      <div class="text-center mb-4 text-black">
-        <h4 class="fw-bold text-uppercase mb-1" style="color: #000;">Jadwal Pelajaran Kelas {{ $kelas->nama_kelas }}</h4>
-        <p class="mb-0" style="color: #000;">Tahun Ajaran: <b>{{ $academicYears->tahun_ajaran }}</b> | Semester: <b>{{ $academicYears->semester }}</b></p>
-        <small>Simulasi Batch: {{ $batch->nama }}</small>
+      <div class="text-center mt-2">
+        <h4 class="fw-bold text-uppercase text-dark">Jadwal Pelajaran Kelas {{ $kelas->nama_kelas }}</h4>
+        <div class="d-flex justify-content-between mt-3 text-start">
+          <p><b>Tahun Ajaran:</b> {{ $academicYears->tahun_ajaran }} <br><b>Semester:</b> {{ $academicYears->semester }}</p>
+          <p><b>Wali Kelas:</b> {{ $kelas->waliKelas->nama_guru ?? 'Belum diatur' }} <br><b>Status Jadwal:</b> {{ strtoupper($batch->status) }}</p>
+        </div>
       </div>
 
       {{-- LOGIKA PEMISAHAN DATA SHIFT --}}
