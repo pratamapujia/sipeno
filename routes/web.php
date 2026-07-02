@@ -7,6 +7,7 @@ use App\Http\Controllers\GeneticScheduleController;
 use App\Http\Controllers\GuruController;
 use App\Http\Controllers\GuruFreeController;
 use App\Http\Controllers\GuruMapelController;
+use App\Http\Controllers\GuruPiketController;
 use App\Http\Controllers\JadwalGuruController;
 use App\Http\Controllers\KelasController;
 use App\Http\Controllers\LaporanJadwalController;
@@ -40,10 +41,10 @@ Route::middleware(['auth'])->group(function () {
             // Route::resource('ruangan', RuanganController::class);
 
             // Import Route
-            Route::post('guru/import', [GuruController::class, 'import'])->name('guru.import');
-            Route::post('mapel/import', [MapelController::class, 'import'])->name('mapel.import');
-            Route::post('kelas/import', [KelasController::class, 'import'])->name('kelas.import');
-            Route::post('slotJam/import', [SlotJamController::class, 'import'])->name('slotJam.import');
+            Route::post('/guru/import', [GuruController::class, 'import'])->name('guru.import');
+            Route::post('/mapel/import', [MapelController::class, 'import'])->name('mapel.import');
+            Route::post('/kelas/import', [KelasController::class, 'import'])->name('kelas.import');
+            Route::post('/slotJam/import', [SlotJamController::class, 'import'])->name('slotJam.import');
 
             // Switch Status Tahun Ajaran
             Route::patch('thnAjaran/{id}/toggle-status', [TahunAjaranController::class, 'toggleStatus'])->name('thnAjaran.toggleStatus');
@@ -52,29 +53,37 @@ Route::middleware(['auth'])->group(function () {
         // Plotting Guru
         Route::prefix('admin')->name('admin.')->group(function () {
             Route::resource('plotting', GuruMapelController::class)->except(['show']);
-            Route::get('guruFree', [GuruFreeController::class, 'index'])->name('guruFree.index');
-            Route::get('guruFree/rekap', [GuruFreeController::class, 'rekap'])->name('guruFree.rekap');
-            Route::post('guruFree', [GuruFreeController::class, 'store'])->name('guruFree.store');
+            Route::get('/guruFree', [GuruFreeController::class, 'index'])->name('guruFree.index');
+            Route::get('/guruFree/rekap', [GuruFreeController::class, 'rekap'])->name('guruFree.rekap');
+            Route::post('/guruFree', [GuruFreeController::class, 'store'])->name('guruFree.store');
         });
 
         // Jadwal Guru
         Route::prefix('admin/jadwal')->name('admin.jadwal.')->group(function () {
-            Route::get('/', [GeneticScheduleController::class, 'index'])->name('index');
+            Route::get('/index', [GeneticScheduleController::class, 'index'])->name('index');
             Route::post('/generate', [GeneticScheduleController::class, 'generate'])->name('generate');
             Route::get('/{id}/show', [GeneticScheduleController::class, 'show'])->name('show');
             Route::get('/{id}/print', [GeneticScheduleController::class, 'print'])->name('print');
             Route::get('/print-all/{id}', [GeneticScheduleController::class, 'printAll'])->name('printAll');
             Route::post('/{id}/activate', [GeneticScheduleController::class, 'activate'])->name('activate');
-            Route::delete('/{id}', [GeneticScheduleController::class, 'destroy'])->name('destroy');
+            Route::delete('{id}', [GeneticScheduleController::class, 'destroy'])->name('destroy');
             Route::put('/update-manual/{id}', [GeneticScheduleController::class, 'updateManual'])->name('updateManual');
         });
 
         // Cetak Jadwal
         Route::prefix('admin/cetak')->name('admin.cetak.')->group(function () {
-            Route::get('index', [CetakJadwalController::class, 'index'])->name('index');
-            Route::get('guru', [CetakJadwalController::class, 'printGuru'])->name('guru');
-            Route::get('kelas', [CetakJadwalController::class, 'printKelas'])->name('kelas');
-            Route::get('semua', [CetakJadwalController::class, 'printAll'])->name('semua');
+            Route::get('/index', [CetakJadwalController::class, 'index'])->name('index');
+            Route::get('/guru', [CetakJadwalController::class, 'printGuru'])->name('guru');
+            Route::get('/kelas', [CetakJadwalController::class, 'printKelas'])->name('kelas');
+            Route::get('/semua', [CetakJadwalController::class, 'printAll'])->name('semua');
+        });
+
+        // Guru Piket
+        Route::prefix('admin/piket')->name('admin.piket.')->group(function () {
+            Route::get('/index', [GuruPiketController::class, 'index'])->name('index');
+            Route::post('/store', [GuruPiketController::class, 'store'])->name('store');
+            Route::delete('/{id}', [GuruPiketController::class, 'destroy'])->name('destroy');
+            Route::get('/cetak', [GuruPiketController::class, 'print'])->name('print');
         });
     });
 

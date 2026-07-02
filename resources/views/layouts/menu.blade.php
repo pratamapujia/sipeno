@@ -59,6 +59,12 @@
             </a>
           </li>
           <li class="sidebar-title">Penjadwalan</li>
+          <li class="sidebar-item {{ request()->is('admin/piket', 'admin/piket/*') ? 'active' : '' }}">
+            <a href="{{ route('admin.piket.index') }}" class='sidebar-link'>
+              <i class="bi bi-person-badge"></i>
+              <span>Jadwal Piket</span>
+            </a>
+          </li>
           <li class="sidebar-item {{ request()->is('admin/plotting', 'admin/plotting/*') ? 'active' : '' }} ">
             <a href="{{ route('admin.plotting.index') }}" class='sidebar-link'>
               <i class="bi bi-calendar-heart"></i>

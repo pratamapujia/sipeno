@@ -31,7 +31,7 @@ class GuruMapelController extends Controller
 
         // Mengambil data ploting (sudah menggunakan eager loading yang benar)
         $plotting = GuruMapel::with(['guru', 'mapel', 'kelas'])
-            ->where('tahun_ajaran_id', $thnAktif->id)
+            ->where('tahun_ajaran_id', $thnAktif->id)->orderBy('created_at', 'desc')
             ->get();
 
         return view('admin.plotting.index', compact('plotting', 'thnAktif'));

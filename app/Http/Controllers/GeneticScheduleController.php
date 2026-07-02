@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\BatchJadwal;
+use App\Models\GuruPiket;
 use App\Models\Jadwal;
 use App\Models\Kelas;
 use App\Models\SlotJam;
@@ -177,19 +178,41 @@ class GeneticScheduleController extends Controller
 
         $jadwal = Jadwal::findOrFail($id);
 
-        // 1. Validasi Bentrok Manual: Pastikan guru tidak sedang mengajar di tempat lain pada jam tujuan
+        // Validasi 1: Cek Guru Piket
+        $sedangPiket = GuruPiket::where('tahun_ajaran_id', $jadwal->academic_year_id)
+            ->where('guru_id', $jadwal->guru_id)
+            ->where('hari', $request->day)
+            ->exists();
+
+        if ($sedangPiket) {
+            return redirect()->back()->with('error', 'Gagal memindah! Guru tersebut berstatus PIKET pada hari ' . $request->day . '.');
+        }
+
+        // Validasi 2: Pastikan GURU tidak sedang mengajar di kelas lain pada jam tujuan
         $cekGuruBentrok = Jadwal::where('schedule_batch_id', $jadwal->schedule_batch_id)
             ->where('day', $request->day)
             ->where('time_slot_id', $request->time_slot_id)
             ->where('guru_id', $jadwal->guru_id)
-            ->where('id', '!=', $jadwal->id) // Abaikan ID jadwal ini sendiri
+            ->where('id', '!=', $jadwal->id)
             ->exists();
 
         if ($cekGuruBentrok) {
             return redirect()->back()->with('error', 'Gagal memindah! Guru tersebut sudah memiliki jadwal mengajar di kelas lain pada hari dan jam tersebut.');
         }
 
-        // 2. Jika aman, lakukan pembaruan (pindah jadwal)
+        // Validasi 3: Pastikan KELAS ini masih kosong pada jam tujuan (Mencegah Database Error)
+        $cekKelasBentrok = Jadwal::where('schedule_batch_id', $jadwal->schedule_batch_id)
+            ->where('day', $request->day)
+            ->where('time_slot_id', $request->time_slot_id)
+            ->where('kelas_id', $jadwal->kelas_id)
+            ->where('id', '!=', $jadwal->id)
+            ->exists();
+
+        if ($cekKelasBentrok) {
+            return redirect()->back()->with('error', 'Gagal memindah! Sudah ada mata pelajaran lain di kelas ini pada jam dan hari tersebut. Harap pindahkan jadwal yang lama terlebih dahulu.');
+        }
+
+        // Jika semua aman, lakukan pembaruan (pindah jadwal)
         $jadwal->update([
             'day' => $request->day,
             'time_slot_id' => $request->time_slot_id,

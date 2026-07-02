@@ -5,6 +5,9 @@
 @endsection
 
 @section('main')
+  {{-- Wadah Flash Data untuk SweetAlert (TAMBAHKAN DI SINI) --}}
+  <div class="flash-data" data-berhasil="{{ Session::get('success') }}"></div>
+  <div class="flash-data" data-gagal="{{ Session::get('error') }}"></div>
   <div class="page-heading">
     <div class="page-title mb-3">
       <div class="row align-items-center">
@@ -189,4 +192,34 @@
 
     </section>
   </div>
+@endsection
+
+@section('script')
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Membaca flash data dari Controller
+      const flashBerhasil = document.querySelector('.flash-data').getAttribute('data-berhasil');
+      const flashGagal = document.querySelectorAll('.flash-data')[1].getAttribute('data-gagal');
+
+      // Menampilkan Notifikasi Success
+      if (flashBerhasil) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil',
+          text: flashBerhasil,
+          confirmButtonColor: '#435ebe'
+        });
+      }
+
+      // Menampilkan Notifikasi Error (Gagal Pindah/Bentrok)
+      if (flashGagal) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Terjadi Konflik!',
+          text: flashGagal,
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    });
+  </script>
 @endsection
