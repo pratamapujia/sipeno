@@ -60,6 +60,9 @@
                       <td class="fw-bold">{{ $day }}</td>
                       <td>{{ $piket->guru->nama_guru }}</td>
                       <td class="text-center">
+                        <button type="button" class="btn icon icon-left btn-warning btn-sm btn-edit" data-id="{{ $piket->id }}" data-hari="{{ $day }}" data-guru="{{ $piket->guru_id }}">
+                          <i class="fas fa-edit"></i> Edit
+                        </button>
                         <form action="{{ route('admin.piket.destroy', $piket->id) }}" method="POST" class="d-inline">
                           @csrf
                           @method('DELETE')
@@ -93,6 +96,9 @@
           <form action="{{ route('admin.piket.store') }}" method="POST" id="formTambahPiket">
             @csrf
             <div class="modal-body">
+              <div class="alert alert-light-primary text-sm border-primary">
+                <i class="fas fa-info-circle me-1"></i> Pastikan guru yang dipilih tidak memiliki jadwal mengajar di kelas pada hari yang sama.
+              </div>
 
               <div class="form-group mb-3">
                 <label for="hari" class="form-label fw-bold">Pilih Hari</label>
@@ -122,6 +128,49 @@
         </div>
       </div>
     </div>
+
+    {{-- Modal Edit Guru Piket --}}
+    <div class="modal fade text-left" id="modalEditPiket" tabindex="-1" role="dialog" aria-labelledby="titleModalEdit" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-warning">
+            <h5 class="modal-title white" id="titleModalEdit"><i class="fas fa-edit me-2"></i> Edit Guru Piket</h5>
+            <button type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close">
+              <i data-feather="x"></i>
+            </button>
+          </div>
+          <form action="" method="POST" id="formEditPiket">
+            @csrf
+            @method('PUT')
+            <div class="modal-body">
+              <div class="form-group mb-3">
+                <label for="edit_hari" class="form-label fw-bold">Pilih Hari</label>
+                <select name="hari" id="edit_hari" class="form-select" required>
+                  <option value="">-- Pilih Hari Tugas --</option>
+                  @foreach ($hari as $day)
+                    <option value="{{ $day }}">{{ $day }}</option>
+                  @endforeach
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="edit_guru_id" class="form-label fw-bold">Pilih Guru</label>
+                <select name="guru_id" id="edit_guru_id" class="form-select" required>
+                  <option value="">-- Cari dan Pilih Guru --</option>
+                  @foreach ($guru as $g)
+                    <option value="{{ $g->id }}">{{ $g->nama_guru }}</option>
+                  @endforeach
+                </select>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Batal</button>
+              <button type="submit" id="btnSubmitEdit" class="btn btn-warning ml-1"><i class="fas fa-save me-1"></i> Perbarui</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   @endif
 
 @endsection
@@ -129,15 +178,72 @@
 @section('script')
   <script src="{{ asset('assets/extensions/simple-datatables/umd/simple-datatables.js') }}"></script>
   <script src="{{ asset('assets/static/js/pages/simple-datatables.js') }}"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script>
-    // Animasi Loading saat Submit Form
-    const formPiket = document.getElementById('formTambahPiket');
-    if (formPiket) {
-      formPiket.addEventListener('submit', function() {
+    document.addEventListener('DOMContentLoaded', function() {
+      // Membaca flash data untuk SweetAlert
+      const flashBerhasil = document.querySelector('.flash-data').getAttribute('data-berhasil');
+      const flashGagal = document.querySelectorAll('.flash-data')[1].getAttribute('data-gagal');
+
+      if (flashBerhasil) {
+        Swal.fire({
+          icon: 'success',
+          title: 'Berhasil',
+          text: flashBerhasil,
+          confirmButtonColor: '#435ebe'
+        });
+      }
+
+      if (flashGagal) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Gagal!',
+          text: flashGagal,
+          confirmButtonColor: '#dc3545'
+        });
+      }
+    });
+
+    // Handle Modal Edit (Melempar data ke dalam modal saat tombol edit ditekan)
+    document.addEventListener('click', function(e) {
+      const btnEdit = e.target.closest('.btn-edit');
+      if (btnEdit) {
+        const id = btnEdit.getAttribute('data-id');
+        const hari = btnEdit.getAttribute('data-hari');
+        const guruId = btnEdit.getAttribute('data-guru');
+
+        // Atur URL form action secara dinamis
+        const formEdit = document.getElementById('formEditPiket');
+        formEdit.action = `{{ url('admin/piket') }}/${id}`;
+
+        // Masukkan nilai ke dalam form select
+        document.getElementById('edit_hari').value = hari;
+        document.getElementById('edit_guru_id').value = guruId;
+
+        // Tampilkan Modal Edit
+        var myModal = new bootstrap.Modal(document.getElementById('modalEditPiket'));
+        myModal.show();
+      }
+    });
+
+    // Animasi Loading saat Submit Form Tambah
+    const formTambah = document.getElementById('formTambahPiket');
+    if (formTambah) {
+      formTambah.addEventListener('submit', function() {
         const btn = document.getElementById('btnSubmitPiket');
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menyimpan...';
+      });
+    }
+
+    // Animasi Loading saat Submit Form Edit
+    const formEdit = document.getElementById('formEditPiket');
+    if (formEdit) {
+      formEdit.addEventListener('submit', function() {
+        const btn = document.getElementById('btnSubmitEdit');
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Memperbarui...';
       });
     }
 

@@ -82,6 +82,7 @@ Route::middleware(['auth'])->group(function () {
         Route::prefix('admin/piket')->name('admin.piket.')->group(function () {
             Route::get('/index', [GuruPiketController::class, 'index'])->name('index');
             Route::post('/store', [GuruPiketController::class, 'store'])->name('store');
+            Route::put('/{id}', [GuruPiketController::class, 'update'])->name('update');
             Route::delete('/{id}', [GuruPiketController::class, 'destroy'])->name('destroy');
             Route::get('/cetak', [GuruPiketController::class, 'print'])->name('print');
         });

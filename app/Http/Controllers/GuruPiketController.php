@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BatchJadwal;
 use App\Models\Guru;
 use App\Models\GuruPiket;
+use App\Models\Jadwal;
 use App\Models\TahunAjaran;
 use Illuminate\Http\Request;
 
@@ -38,7 +40,7 @@ class GuruPiketController extends Controller
 
         $activeYear = TahunAjaran::where('is_active', true)->firstOrFail();
 
-        // VALIDASI: Cek apakah guru sudah terdaftar piket di hari tersebut
+        // 1. Cek apakah guru sudah terdaftar piket di hari tersebut
         $isPiket = GuruPiket::where('tahun_ajaran_id', $activeYear->id)
             ->where('guru_id', $request->guru_id)
             ->where('hari', $request->hari)
@@ -46,6 +48,19 @@ class GuruPiketController extends Controller
 
         if ($isPiket) {
             return back()->with('error', 'Guru tersebut sudah terdaftar sebagai piket pada hari ' . $request->hari . '.');
+        }
+
+        // 2. PROTEKSI TAMBAHAN: Cek apakah guru pengganti punya jadwal mengajar (Jika jadwal sudah digenerate & Aktif)
+        $activeBatch = BatchJadwal::where('status', 'active')->first();
+        if ($activeBatch) {
+            $isTeaching = Jadwal::where('schedule_batch_id', $activeBatch->id)
+                ->where('guru_id', $request->guru_id)
+                ->where('day', $request->hari)
+                ->exists();
+
+            if ($isTeaching) {
+                return back()->with('error', 'Gagal! Guru tersebut tidak bisa dijadwalkan piket karena memiliki jadwal mengajar di kelas pada hari ' . $request->hari . '.');
+            }
         }
 
         // Simpan Data
@@ -56,6 +71,52 @@ class GuruPiketController extends Controller
         ]);
 
         return back()->with('success', 'Jadwal Guru Piket berhasil ditambahkan!');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'guru_id' => 'required',
+            'hari' => 'required'
+        ], [
+            'guru_id.required' => 'Guru harus dipilih.',
+            'hari.required' => 'Hari harus dipilih.',
+        ]);
+
+        $piket = GuruPiket::findOrFail($id);
+        $activeYear = TahunAjaran::where('is_active', true)->firstOrFail();
+
+        // 1. Cek apakah guru sudah terdaftar piket di hari tersebut (Abaikan ID miliknya sendiri)
+        $isPiket = GuruPiket::where('tahun_ajaran_id', $activeYear->id)
+            ->where('guru_id', $request->guru_id)
+            ->where('hari', $request->hari)
+            ->where('id', '!=', $id)
+            ->exists();
+
+        if ($isPiket) {
+            return back()->with('error', 'Guru tersebut sudah terdaftar sebagai piket pada hari ' . $request->hari . '.');
+        }
+
+        // 2. PROTEKSI TAMBAHAN: Cek apakah guru pengganti punya jadwal mengajar (Jika jadwal sudah digenerate & Aktif)
+        $activeBatch = BatchJadwal::where('status', 'active')->first();
+        if ($activeBatch) {
+            $isTeaching = Jadwal::where('schedule_batch_id', $activeBatch->id)
+                ->where('guru_id', $request->guru_id)
+                ->where('day', $request->hari)
+                ->exists();
+
+            if ($isTeaching) {
+                return back()->with('error', 'Gagal Edit! Guru yang dipilih memiliki jadwal mengajar di kelas pada hari ' . $request->hari . '. Harap sesuaikan kembali.');
+            }
+        }
+
+        // Update Data
+        $piket->update([
+            'guru_id' => $request->guru_id,
+            'hari' => $request->hari,
+        ]);
+
+        return back()->with('success', 'Jadwal Guru Piket berhasil diperbarui!');
     }
 
     public function destroy($id)
