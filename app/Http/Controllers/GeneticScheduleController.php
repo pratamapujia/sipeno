@@ -176,7 +176,12 @@ class GeneticScheduleController extends Controller
             'time_slot_id' => 'required',
         ]);
 
-        $jadwal = Jadwal::findOrFail($id);
+        // Tambahkan relasi mapel untuk mengecek tipe mapelnya (teori/praktikum)
+        $jadwal = Jadwal::with('mapel')->findOrFail($id);
+
+        // Tarik data slot tujuan untuk mendapatkan slot_number
+        $targetSlot = SlotJam::findOrFail($request->time_slot_id);
+        $slotNumber = $targetSlot->slot_number;
 
         // Validasi 1: Cek Guru Piket
         $sedangPiket = GuruPiket::where('tahun_ajaran_id', $jadwal->academic_year_id)
@@ -200,7 +205,7 @@ class GeneticScheduleController extends Controller
             return redirect()->back()->with('error', 'Gagal memindah! Guru tersebut sudah memiliki jadwal mengajar di kelas lain pada hari dan jam tersebut.');
         }
 
-        // Validasi 3: Pastikan KELAS ini masih kosong pada jam tujuan (Mencegah Database Error)
+        // Validasi 3: Pastikan KELAS ini masih kosong pada jam tujuan
         $cekKelasBentrok = Jadwal::where('schedule_batch_id', $jadwal->schedule_batch_id)
             ->where('day', $request->day)
             ->where('time_slot_id', $request->time_slot_id)
@@ -210,6 +215,43 @@ class GeneticScheduleController extends Controller
 
         if ($cekKelasBentrok) {
             return redirect()->back()->with('error', 'Gagal memindah! Sudah ada mata pelajaran lain di kelas ini pada jam dan hari tersebut. Harap pindahkan jadwal yang lama terlebih dahulu.');
+        }
+
+        // --- VALIDASI BARU 4: Aturan Zona Kosong Jumat ---
+        if ($request->day === 'Jumat' && $slotNumber >= 7 && $slotNumber <= 10) {
+            return redirect()->back()->with('error', 'Gagal memindah! Jam ke-7 hingga 10 pada hari Jumat adalah jam kosong / waktu istirahat ibadah.');
+        }
+
+        // --- VALIDASI BARU 5: Aturan Tipe Mapel (Teori vs Praktikum) ---
+        $tipeMapel = $jadwal->mapel->type ?? 'teori';
+        if ($tipeMapel === 'teori' && $slotNumber > 10) {
+            return redirect()->back()->with('error', 'Gagal memindah! Mapel Teori wajib ditaruh di Shift Pagi (Jam ke-1 s/d 10).');
+        }
+        if ($tipeMapel === 'praktikum' && $slotNumber <= 10) {
+            return redirect()->back()->with('error', 'Gagal memindah! Mapel Praktikum wajib ditaruh di Shift Siang (Jam ke-11 s/d 17).');
+        }
+
+        // --- VALIDASI BARU 6: Karantina Eksklusif Shift Harian ---
+        // Cek apakah di hari tujuan, kelas ini sudah punya mapel di shift lain
+        $jadwalHariTujuan = Jadwal::with('slotJam')
+            ->where('schedule_batch_id', $jadwal->schedule_batch_id)
+            ->where('day', $request->day)
+            ->where('kelas_id', $jadwal->kelas_id)
+            ->where('id', '!=', $jadwal->id)
+            ->get();
+
+        $adaPagi = $slotNumber <= 10;
+        $adaSiang = $slotNumber >= 11;
+
+        foreach ($jadwalHariTujuan as $jht) {
+            if ($jht->slotJam) { // Memastikan relasi tidak null
+                if ($jht->slotJam->slot_number <= 10) $adaPagi = true;
+                if ($jht->slotJam->slot_number >= 11) $adaSiang = true;
+            }
+        }
+
+        if ($adaPagi && $adaSiang) {
+            return redirect()->back()->with('error', 'Gagal memindah! Jika dipindah ke sini, Kelas akan masuk Pagi dan Siang sekaligus pada hari ' . $request->day . '.');
         }
 
         // Jika semua aman, lakukan pembaruan (pindah jadwal)

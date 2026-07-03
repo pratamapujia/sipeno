@@ -5,10 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cetak Semua Jadwal Kelas</title>
-
     <link rel="stylesheet" href="{{ asset('assets/compiled/css/app.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/extensions/@fortawesome/fontawesome-free/css/all.min.css') }}">
-
     <style>
       body {
         font-size: 11px !important;
@@ -68,14 +66,19 @@
         color: #000;
       }
 
-      .bg-istirahat {
+      .bg-kosong {
+        background: repeating-linear-gradient(45deg, #fff, #fff 5px, #e0e0e0 5px, #e0e0e0 10px) !important;
         font-style: italic;
-        font-weight: 900;
-        color: #000;
-        letter-spacing: 2px;
+        font-weight: bold;
       }
 
-      /* KUNCI UTAMA AMAN CETAK PER HALAMAN */
+      .bg-istirahat-row td {
+        background-color: #f0f0f0 !important;
+        font-weight: 900;
+        font-style: italic;
+        letter-spacing: 1px;
+      }
+
       .page-break {
         page-break-after: always;
       }
@@ -116,30 +119,27 @@
       </div>
     </div>
 
-    {{-- LOOPING UTAMA: Mengulang Cetak untuk Setiap Kelas --}}
     @foreach ($kelasList as $index => $kelas)
       @php
         $matrixId = $kelasMatrix[$kelas->id] ?? [];
         $shifts = [
             'Pagi' => [
-                'label' => 'SHIFT PAGI (Jam ke-1 s/d 12)',
-                'slots' => $slots->where('slot_number', '<=', 12),
+                'label' => 'SHIFT PAGI (Mapel Teori | Slot 1 s/d 10)',
+                'slots' => $slots->where('slot_number', '<=', 10),
             ],
             'Siang' => [
-                'label' => 'SHIFT SIANG (Jam ke-13 s/d 18)',
-                'slots' => $slots->where('slot_number', '>', 12),
+                'label' => 'SHIFT SIANG (Mapel Praktikum | Slot 11 s/d 17)',
+                'slots' => $slots->where('slot_number', '>', 10),
             ],
         ];
+        $waktuJumat = [1 => '07:00 - 07:30', 2 => '07:30 - 08:00', 3 => '08:00 - 08:30', 4 => '08:45 - 09:15', 5 => '09:15 - 09:45', 6 => '09:45 - 10:15'];
       @endphp
 
       <div class="container-fluid px-0 {{ !$loop->last ? 'page-break' : '' }}">
-
-        {{-- KOP SURAT (Muncul di setiap halaman kelas) --}}
         <div class="text-center mb-4">
-          <img src="{{ asset('assets/static/images/kop-print.png') }}" alt="Kop Surat SMK PGRI 1 Sidoarjo" class="img-fluid w-100">
+          <img src="{{ asset('assets/static/images/kop-print.png') }}" alt="Kop Surat" class="img-fluid w-100">
         </div>
 
-        {{-- HEADER DOKUMEN --}}
         <div class="text-center mt-2">
           <h4 class="fw-bold text-uppercase text-dark">Jadwal Pelajaran Kelas {{ $kelas->nama_kelas }}</h4>
           <div class="d-flex justify-content-between mt-3 text-start">
@@ -148,12 +148,10 @@
           </div>
         </div>
 
-        {{-- Render Tabel Shift Pagi & Siang --}}
         @foreach ($shifts as $shift)
           @if ($shift['slots']->count() > 0)
             <div class="shift-section mb-4">
               <div class="shift-title">{{ $shift['label'] }}</div>
-
               <table class="table-bw">
                 <thead>
                   <tr>
@@ -166,27 +164,72 @@
                 <tbody>
                   @foreach ($shift['slots'] as $slot)
                     <tr>
-                      <td class="cell-jam {{ $slot->is_istirahat ? 'bg-istirahat' : '' }}">
+                      <td class="cell-jam">
                         Jam ke-{{ $slot->slot_number }}<br>
                         <span style="font-size: 9px; font-weight: normal;">{{ substr($slot->start_time, 0, 5) }} - {{ substr($slot->end_time, 0, 5) }}</span>
                       </td>
 
                       @foreach ($days as $day)
-                        @if ($slot->is_istirahat)
-                          <td class="bg-istirahat">ISTIRAHAT</td>
+                        @if ($day == 'Jumat' && $slot->slot_number >= 7 && $slot->slot_number <= 10)
+                          <td class="bg-kosong">-</td>
                         @else
                           <td class="cell-day">
                             @if (isset($matrixId[$slot->id][$day]))
                               @php $s = $matrixId[$slot->id][$day]; @endphp
+                              @if ($day == 'Jumat' && $slot->slot_number <= 6)
+                                <span style="display:block; font-size:8px; border-bottom: 1px solid #000; margin-bottom:3px; font-weight:bold;">{{ $waktuJumat[$slot->slot_number] ?? '' }}</span>
+                              @endif
                               <span class="text-mapel">{{ $s->mapel->nama_mapel }}</span>
                               <span class="text-guru">{{ $s->guru->nama_guru }}</span>
                             @else
-                              <span class="text-kosong">-</span>
+                              <span class="text-muted">-</span>
                             @endif
                           </td>
                         @endif
                       @endforeach
                     </tr>
+
+                    {{-- SISIPAN: ISTIRAHAT JUMAT --}}
+                    @if ($slot->slot_number == 3)
+                      <tr class="bg-istirahat-row">
+                        <td>ISTIRAHAT</td>
+                        @foreach ($days as $day)
+                          @if ($day == 'Jumat')
+                            <td>ISTIRAHAT JUMAT</td>
+                          @else
+                            <td class="bg-kosong">-</td>
+                          @endif
+                        @endforeach
+                      </tr>
+                    @endif
+
+                    {{-- SISIPAN: ISTIRAHAT 1 SENIN-KAMIS --}}
+                    @if ($slot->slot_number == 4)
+                      <tr class="bg-istirahat-row">
+                        <td>ISTIRAHAT</td>
+                        @foreach ($days as $day)
+                          @if ($day != 'Jumat')
+                            <td>ISTIRAHAT 1</td>
+                          @else
+                            <td class="bg-kosong">-</td>
+                          @endif
+                        @endforeach
+                      </tr>
+                    @endif
+
+                    {{-- SISIPAN: ISTIRAHAT 2 SENIN-KAMIS --}}
+                    @if ($slot->slot_number == 7)
+                      <tr class="bg-istirahat-row">
+                        <td>ISTIRAHAT</td>
+                        @foreach ($days as $day)
+                          @if ($day != 'Jumat')
+                            <td>ISTIRAHAT 2</td>
+                          @else
+                            <td class="bg-kosong">-</td>
+                          @endif
+                        @endforeach
+                      </tr>
+                    @endif
                   @endforeach
                 </tbody>
               </table>
@@ -194,19 +237,20 @@
           @endif
         @endforeach
 
-        {{-- TANDA TANGAN --}}
         <div class="row mt-4" style="page-break-inside: avoid; color: #000;">
-          <div class="col-8"></div>
-          <div class="col-4 text-center">
+          <div class="col-6 text-center">
+            <p class="mb-1">Mengetahui,</p>
+            <p style="margin-bottom: 80px;">Wali Kelas {{ $kelas->nama_kelas }}</p>
+            <p class="fw-bold text-decoration-underline mb-0">{{ $kelas->waliKelas->nama_guru ?? '_______________________' }}</p>
+          </div>
+          <div class="col-6 text-center">
             <p class="mb-1">Sidoarjo, {{ now()->translatedFormat('d F Y') }}</p>
             <p style="margin-bottom: 80px;">Waka Kurikulum</p>
             <p class="fw-bold text-decoration-underline mb-0">{{ Auth::user()->name }}</p>
           </div>
         </div>
-
       </div>
     @endforeach
-
   </body>
 
 </html>

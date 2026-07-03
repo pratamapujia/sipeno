@@ -30,7 +30,7 @@ class KelasImport implements ToModel, WithValidation, WithHeadingRow
         ];
     }
 
-    public function customeMessage()
+    public function customValidationMessages()
     {
         return [
             'nama_kelas.required' => 'Kelas tidak boleh kosong pada baris :attribute',

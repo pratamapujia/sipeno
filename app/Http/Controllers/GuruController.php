@@ -38,13 +38,13 @@ class GuruController extends Controller
     public function store(Request $request)
     {
         $validasi = Validator::make($request->all(), [
-            'nip' => 'unique:teachers,nip',
+            // 'nip' => 'unique:teachers,nip',
             'nama_guru' => 'required|min:3',
             'jenis_kelamin' => 'required',
             'status' => 'required',
             'email' => 'required|email|unique:users,email',
         ], [
-            'nip.unique' => 'NIP sudah terdaftar',
+            // 'nip.unique' => 'NIP sudah terdaftar',
             'nama_guru.required' => 'Nama Guru harus diisi',
             'nama_guru.min' => 'Nama Guru minimal 3 karakter',
             'jenis_kelamin.required' => 'Pilih salah satu',
@@ -69,7 +69,7 @@ class GuruController extends Controller
 
             Guru::create([
                 'users_id' => $user->id,
-                'nip' => $request->nip,
+                // 'nip' => $request->nip,
                 'nama_guru' => $request->nama_guru,
                 'jenis_kelamin' => $request->jenis_kelamin,
                 'status' => $request->status,
@@ -111,7 +111,7 @@ class GuruController extends Controller
 
         $request->validate([
             'nama_guru'     => 'required',
-            'nip'           => 'required|unique:teachers,nip,' . $guru->id,
+            // 'nip'           => 'required|unique:teachers,nip,' . $guru->id,
             'jenis_kelamin' => 'required|in:L,P',
             'status'        => 'required',
             'email'         => 'required|email|unique:users,email,' . $guru->users_id,
@@ -133,7 +133,7 @@ class GuruController extends Controller
             // 3. Update data biodata di tabel teachers
             $guru->update([
                 'nama_guru'     => $request->nama_guru,
-                'nip'           => $request->nip,
+                // 'nip'           => $request->nip,
                 'jenis_kelamin' => $request->jenis_kelamin,
                 'status'        => $request->status,
             ]);
@@ -178,7 +178,7 @@ class GuruController extends Controller
             $uploadedHeaders = array_keys($data[0][0]);
 
             // 4. Definisikan header template yang wajib ada
-            $expectedHeaders = ['nip', 'nama_guru', 'email', 'jenis_kelamin', 'status'];
+            $expectedHeaders = ['nama_guru', 'email', 'jenis_kelamin', 'status'];
 
             // 5. Cari tahu apakah ada kolom wajib yang tidak ditemukan di file yang diupload
             $missingHeaders = array_diff($expectedHeaders, $uploadedHeaders);

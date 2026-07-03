@@ -36,21 +36,21 @@ class RolePermissionSeeder extends Seeder
         // =========================================================
         // 3. Buat Akun GURU (Satu paket dengan profil Teacher-nya)
         // =========================================================
-        $guru = User::create([
-            'name' => 'Budi Santoso',
-            'email' => 'guru@sekolah.com',
-            'password' => Hash::make('guru123'),
-        ]);
-        $guru->assignRole($roleGuru);
+        // $guru = User::create([
+        //     'name' => 'Budi Santoso',
+        //     'email' => 'guru@sekolah.com',
+        //     'password' => Hash::make('guru123'),
+        // ]);
+        // $guru->assignRole($roleGuru);
 
         // Langsung buatkan profil biodatanya di tabel teachers
-        Guru::create([
-            'users_id'      => $guru->id,
-            'nip'           => '198001012005011001',
-            'nama_guru'     => 'Budi Santoso, S.Pd.',
-            'jenis_kelamin' => 'L',
-            'status'        => 'Tetap',
-        ]);
+        // Guru::create([
+        //     'users_id'      => $guru->id,
+        //     'nip'           => '198001012005011001',
+        //     'nama_guru'     => 'Budi Santoso, S.Pd.',
+        //     'jenis_kelamin' => 'L',
+        //     'status'        => 'Tetap',
+        // ]);
 
 
         // =========================================================
@@ -67,22 +67,22 @@ class RolePermissionSeeder extends Seeder
         // =========================================================
         // 5. Buat Akun MULTI-ROLE (Admin yang juga seorang Guru)
         // =========================================================
-        $superGuru = User::create([
-            'name' => 'Siti Kurikulum',
-            'email' => 'kurikulum@sekolah.com',
-            'password' => Hash::make('kurikulum123'),
-        ]);
+        // $superGuru = User::create([
+        //     'name' => 'Siti Kurikulum',
+        //     'email' => 'kurikulum@sekolah.com',
+        //     'password' => Hash::make('kurikulum123'),
+        // ]);
 
-        $superGuru->assignRole([$roleAdmin, $roleGuru]);
+        // $superGuru->assignRole([$roleAdmin, $roleGuru]);
 
-        Guru::create([
-            'users_id'      => $superGuru->id,
-            'nip'           => '198502022010012002',
-            'nama_guru'     => 'Siti Kurikulum, M.Pd.',
-            'jenis_kelamin' => 'P',
-            'status'        => 'Tetap',
-        ]);
+        // Guru::create([
+        //     'users_id'      => $superGuru->id,
+        //     'nip'           => '198502022010012002',
+        //     'nama_guru'     => 'Siti Kurikulum, M.Pd.',
+        //     'jenis_kelamin' => 'P',
+        //     'status'        => 'Tetap',
+        // ]);
 
-        $this->command->info('Seeder Role, User, dan Teacher berhasil dijalankan!');
+        $this->command->info('Seeder berhasil dijalankan dan selesai!');
     }
 }

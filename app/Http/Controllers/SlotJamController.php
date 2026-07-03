@@ -56,7 +56,7 @@ class SlotJamController extends Controller
             'slot_number' => $request->slot_number,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
-            'is_istirahat' => $request->has('is_istirahat') ? true : false,
+            // 'is_istirahat' => $request->has('is_istirahat') ? true : false,
         ]);
         return redirect()->route('admin.m.slotJam.index')->with('success', 'Slot Jam ke-' . $request->slot_number . ' berhasil ditambahkan');
     }

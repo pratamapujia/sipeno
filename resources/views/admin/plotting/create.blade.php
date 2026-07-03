@@ -54,13 +54,18 @@
                       <label for="mapel_id" class="fw-bold mb-1">Mata Pelajaran (Bisa pilih lebih dari satu)</label>
 
                       <select name="mapel_id[]" id="mapel_id" class="choices form-select multiple-remove @error('mapel_id') is-invalid @enderror" multiple="multiple" required>
-                        <optgroup label="Daftar Mata Pelajaran">
-                          @foreach ($mapel as $m)
-                            <option value="{{ $m->id }}" {{ is_array(old('mapel_id')) && in_array($m->id, old('mapel_id')) ? 'selected' : '' }}>
-                              {{ $m->nama_mapel }} ({{ $m->beban_jam }} JP)
-                            </option>
-                          @endforeach
-                        </optgroup>
+                        @php
+                          $groupedMapel = $mapel->groupBy('type');
+                        @endphp
+                        @foreach ($groupedMapel as $tipe => $listMapel)
+                          <optgroup label="Tipe: {{ ucfirst($tipe) }}">
+                            @foreach ($listMapel as $m)
+                              <option value="{{ $m->id }}" {{ is_array(old('mapel_id')) && in_array($m->id, old('mapel_id')) ? 'selected' : '' }}>
+                                {{ $m->nama_mapel }} ({{ $m->beban_jam }} JP)
+                              </option>
+                            @endforeach
+                          </optgroup>
+                        @endforeach
                       </select>
 
                       @error('mapel_id')

@@ -73,12 +73,12 @@
                   @enderror
                 </div>
               </div>
-              <div class="col-12 mt-3 mb-4">
+              {{-- <div class="col-12 mt-3 mb-4">
                 <div class="form-check form-switch">
                   <input class="form-check-input" type="checkbox" id="is_istirahat" name="is_istirahat" value="1">
                   <label class="form-check-label" for="is_istirahat">Tandai sebagai Jam Istirahat (Jadwal tidak akan diplot di jam ini)</label>
                 </div>
-              </div>
+              </div> --}}
               <div class="col-12">
                 <div class="row">
                   <div class="col-6 mt-2">

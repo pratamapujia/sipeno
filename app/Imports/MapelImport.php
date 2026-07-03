@@ -31,7 +31,7 @@ class MapelImport implements ToModel, WithValidation, WithHeadingRow
         ];
     }
 
-    public function customeMessage()
+    public function customValidationMessages()
     {
         return [
             'nama_mapel.required' => 'Nama mapel harus diisi',

@@ -104,10 +104,15 @@
             <div class="alert border border-success text-sm">
               <h6>Aturan Pengisian Excel:</h6>
               <ol class="mb-0 ps-3 text-black">
-                <li>Header baris pertama wajib: <b>slot_number</b>, <b>start_time</b>, <b>end_time</b>, <b>is_istirahat</b></li>
-                <li>Kolom <b>slot_number</b> isi dengan angka urutan jam pelajaran dan istirahat (1, 2, 3, dst). Kolom slot_number <b>Wajib Diisi</b></li>
-                <li>Kolom <b>start_time</b> dan <b>end_time</b> isi dengan waktu mulai dan waktu selesai mengajar dalam format HH:MM(07:00) kalau siang tulis dengan (13:00)</li>
-                <li>Kolom <b>is_istirahat</b> isi dengan: <b>true</b> untuk istirahat dan <b>biarkan kosong</b> jika bukan jam istirahat</li>
+                <li>
+                  Isi data dengan jam <span class="text-danger">EFEKTIF</span>, <b>BUKAN</b> jam <span class="text-danger">ISTIRAHAT!</span> </br>
+                  Untuk jam istirahat harap di kosongi saja.
+                </li>
+                <li>Header baris pertama wajib: <b>slot_number</b>, <b>start_time</b>, dan <b>end_time</b>.</li>
+                <li>Kolom <b>slot_number</b> isi dengan angka urutan jam pelajaran. </br>
+                  <b>Misal: 1</b>, <b>2</b>, <b>3</b>, dst. Kolom slot_number <b>Wajib Diisi</b>.
+                </li>
+                <li>Kolom <b>start_time</b> dan <b>end_time</b> isi dengan waktu mulai dan waktu selesai mengajar dalam format <b>HH:MM(07:00)</b> kalau siang tulis dengan <b>(13:00)</b>.</li>
               </ol>
             </div>
             <div class="form-group mt-3">

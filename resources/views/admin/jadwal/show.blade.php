@@ -5,9 +5,9 @@
 @endsection
 
 @section('main')
-  {{-- Wadah Flash Data untuk SweetAlert --}}
   <div class="flash-data" data-berhasil="{{ Session::get('success') }}"></div>
   <div class="flash-data" data-gagal="{{ Session::get('error') }}"></div>
+
   <div class="page-heading">
     <div class="page-title mb-3">
       <div class="row align-items-center">
@@ -33,7 +33,6 @@
     </div>
 
     <section class="section">
-      {{-- Filter Kelas --}}
       <div class="card mb-4 shadow-sm">
         <div class="card-body py-3">
           <div class="row align-items-center">
@@ -62,23 +61,30 @@
         </div>
       </div>
 
-      {{-- LOGIKA PEMISAHAN SHIFT --}}
       @php
         $shiftGroups = [
             'Pagi' => [
-                'title' => 'Shift Pagi (Jam ke-1 s/d 12)',
+                'title' => 'Shift Pagi (Mapel Teori | Slot 1 - 10)',
                 'icon' => 'fas fa-sun text-warning',
-                'data' => $slots->where('slot_number', '<=', 12),
+                'data' => $slots->where('slot_number', '<=', 10),
             ],
             'Siang' => [
-                'title' => 'Shift Siang (Jam ke-13 s/d 18)',
+                'title' => 'Shift Siang (Mapel Praktikum | Slot 11 - 17)',
                 'icon' => 'fas fa-cloud-sun text-info',
-                'data' => $slots->where('slot_number', '>', 12),
+                'data' => $slots->where('slot_number', '>', 10),
             ],
+        ];
+
+        $waktuJumat = [
+            1 => '07:00 - 07:30',
+            2 => '07:30 - 08:00',
+            3 => '08:00 - 08:30',
+            4 => '08:45 - 09:15',
+            5 => '09:15 - 09:45',
+            6 => '09:45 - 10:15',
         ];
       @endphp
 
-      {{-- Render Tabel Berdasarkan Grup Shift --}}
       @foreach ($shiftGroups as $shiftKey => $shift)
         @if ($shift['data']->count() > 0)
           <div class="card shadow-sm mb-4">
@@ -98,26 +104,34 @@
                   </thead>
                   <tbody>
                     @foreach ($shift['data'] as $slot)
-                      <tr class="{{ $slot->is_istirahat ? 'table-warning' : '' }}">
+                      <tr>
                         <td>
                           <b class="text-nowrap text-dark">Jam ke-{{ $slot->slot_number }}</b><br>
-                          <small class="text-muted text-nowrap">{{ substr($slot->start_time, 0, 5) }} - {{ substr($slot->end_time, 0, 5) }}</small>
+                          <small class="text-muted text-nowrap">{{ substr($slot->start_time, 0, 5) }} - {{ substr($slot->end_time, 0, 5) }}</small><br>
+                          <small class="text-danger" style="font-size: 10px;">(Senin-Kamis)</small>
                         </td>
 
                         @foreach ($days as $day)
                           <td>
-                            @if ($slot->is_istirahat)
-                              <small class="text-muted font-italic"><i class="fas fa-coffee me-1"></i> ISTIRAHAT</small>
+                            @if ($day == 'Jumat' && $slot->slot_number >= 7 && $slot->slot_number <= 10)
+                              <div class="text-center text-muted p-3 border rounded" style="background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 10px, #e9ecef 10px, #e9ecef 20px);">
+                                <i class="fas fa-ban mb-1 d-block text-secondary"></i> <small>KOSONG</small>
+                              </div>
                             @else
                               @if (isset($jadwalMatrix[$slot->id][$day]))
                                 @php $s = $jadwalMatrix[$slot->id][$day]; @endphp
 
                                 <div class="card mb-0 shadow-sm border">
                                   <div class="card-body p-2 text-center">
+                                    @if ($day == 'Jumat' && $slot->slot_number <= 6)
+                                      <span class="badge bg-light-info text-dark border border-info mb-2 d-block">
+                                        <i class="far fa-clock me-1"></i> {{ $waktuJumat[$slot->slot_number] ?? '' }}
+                                      </span>
+                                    @endif
+
                                     <span class="fw-bold d-block text-primary">{{ $s->mapel->nama_mapel }}</span>
                                     <small class="text-dark d-block">{{ ucwords(strtolower($s->guru->nama_guru)) }}</small>
 
-                                    {{-- Tombol Edit HANYA muncul jika status BUKAN active --}}
                                     @if ($batch->status != 'active')
                                       <button class="btn btn-sm btn-light-secondary mt-2 w-100" data-bs-toggle="modal" data-bs-target="#editModal{{ $s->id }}">
                                         <i class="fas fa-edit"></i> Pindah
@@ -126,7 +140,6 @@
                                   </div>
                                 </div>
 
-                                {{-- Modal Edit HANYA dirender jika status BUKAN active --}}
                                 @if ($batch->status != 'active')
                                   <div class="modal fade text-left" id="editModal{{ $s->id }}" tabindex="-1" role="dialog" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -160,9 +173,6 @@
                                                 @foreach ($slots as $slotItem)
                                                   <option value="{{ $slotItem->id }}" {{ $s->time_slot_id == $slotItem->id ? 'selected' : '' }}>
                                                     Jam ke-{{ $slotItem->slot_number }} ({{ substr($slotItem->start_time, 0, 5) }} - {{ substr($slotItem->end_time, 0, 5) }})
-                                                    @if ($slotItem->is_istirahat)
-                                                      [ISTIRAHAT]
-                                                    @endif
                                                   </option>
                                                 @endforeach
                                               </select>
@@ -178,13 +188,54 @@
                                   </div>
                                 @endif
                               @else
-                                {{-- Jika kosong --}}
                                 <div class="text-center text-muted p-3">-Kosong-</div>
                               @endif
                             @endif
                           </td>
                         @endforeach
                       </tr>
+
+                      {{-- SISIPAN: ISTIRAHAT JUMAT (Setelah Jam ke-3) --}}
+                      @if ($slot->slot_number == 3)
+                        <tr class="table-warning">
+                          <td class="align-middle"><b class="text-dark"><i class="fas fa-coffee me-1"></i> ISTIRAHAT</b></td>
+                          @foreach ($days as $day)
+                            @if ($day == 'Jumat')
+                              <td class="align-middle"><b class="text-dark" style="letter-spacing: 2px;">ISTIRAHAT JUMAT</b></td>
+                            @else
+                              <td class="text-muted" style="background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 10px, #e9ecef 10px, #e9ecef 20px);">-</td>
+                            @endif
+                          @endforeach
+                        </tr>
+                      @endif
+
+                      {{-- SISIPAN: ISTIRAHAT 1 SENIN-KAMIS (Setelah Jam ke-4) --}}
+                      @if ($slot->slot_number == 4)
+                        <tr class="table-warning">
+                          <td class="align-middle"><b class="text-dark"><i class="fas fa-coffee me-1"></i> ISTIRAHAT</b></td>
+                          @foreach ($days as $day)
+                            @if ($day != 'Jumat')
+                              <td class="align-middle"><b class="text-dark" style="letter-spacing: 2px;">ISTIRAHAT 1</b></td>
+                            @else
+                              <td class="text-muted" style="background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 10px, #e9ecef 10px, #e9ecef 20px);">-</td>
+                            @endif
+                          @endforeach
+                        </tr>
+                      @endif
+
+                      {{-- SISIPAN: ISTIRAHAT 2 SENIN-KAMIS (Setelah Jam ke-7) --}}
+                      @if ($slot->slot_number == 7)
+                        <tr class="table-warning">
+                          <td class="align-middle"><b class="text-dark"><i class="fas fa-utensils me-1"></i> ISTIRAHAT</b></td>
+                          @foreach ($days as $day)
+                            @if ($day != 'Jumat')
+                              <td class="align-middle"><b class="text-dark" style="letter-spacing: 2px;">ISTIRAHAT 2</b></td>
+                            @else
+                              <td class="text-muted" style="background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 10px, #e9ecef 10px, #e9ecef 20px);">-</td>
+                            @endif
+                          @endforeach
+                        </tr>
+                      @endif
                     @endforeach
                   </tbody>
                 </table>
@@ -202,11 +253,9 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Membaca flash data dari Controller
       const flashBerhasil = document.querySelector('.flash-data').getAttribute('data-berhasil');
       const flashGagal = document.querySelectorAll('.flash-data')[1].getAttribute('data-gagal');
 
-      // Menampilkan Notifikasi Success
       if (flashBerhasil) {
         Swal.fire({
           icon: 'success',
@@ -216,7 +265,6 @@
         });
       }
 
-      // Menampilkan Notifikasi Error (Gagal Pindah/Bentrok)
       if (flashGagal) {
         Swal.fire({
           icon: 'error',

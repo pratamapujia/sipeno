@@ -36,11 +36,11 @@ class SlotJamImport implements ToModel, WithHeadingRow, WithValidation
         }
 
         // Deteksi nilai is_istirahat (misal di excel ditulis 'ya' atau 'tidak', atau '1'/'0')
-        $is_istirahat = false;
-        if (isset($row['is_istirahat'])) {
-            $val = strtolower(trim($row['is_istirahat']));
-            $is_istirahat = in_array($val, ['ya', 'y', '1', 'true', 'istirahat']);
-        }
+        // $is_istirahat = false;
+        // if (isset($row['is_istirahat'])) {
+        //     $val = strtolower(trim($row['is_istirahat']));
+        //     $is_istirahat = in_array($val, ['ya', 'y', '1', 'true', 'istirahat']);
+        // }
 
         // Gunakan updateOrCreate agar tidak error jika ada slot ganda
         // Cocokkan berdasarkan kolom 'slot_number' (atau 'slot' dari Excel)
@@ -49,7 +49,7 @@ class SlotJamImport implements ToModel, WithHeadingRow, WithValidation
             [
                 'start_time' => $row['start_time'] ?? $row['mulai'],
                 'end_time' => $row['end_time'] ?? $row['selesai'],
-                'is_istirahat' => $is_istirahat,
+                // 'is_istirahat' => $is_istirahat,
             ]
         );
     }

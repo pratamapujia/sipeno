@@ -39,7 +39,6 @@ class GuruImport implements ToModel, WithHeadingRow, WithValidation
 
         // Simpan atau update profil guru
         Guru::updateOrCreate(
-            ['nip' => $row['nip']], // Acuan pencarian data
             [
                 'users_id' => $user->id,
                 'nama_guru' => $row['nama_guru'],
