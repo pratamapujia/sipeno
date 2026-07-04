@@ -132,7 +132,25 @@
                 'slots' => $slots->where('slot_number', '>', 10),
             ],
         ];
-        $waktuJumat = [1 => '07:00 - 07:30', 2 => '07:30 - 08:00', 3 => '08:00 - 08:30', 4 => '08:45 - 09:15', 5 => '09:15 - 09:45', 6 => '09:45 - 10:15'];
+
+        $waktuJumatPagi = [
+            1 => '07:30 - 08:00',
+            2 => '08:00 - 08:30',
+            3 => '08:30 - 09:00',
+            4 => '09:30 - 10:00',
+            5 => '10:00 - 10:30',
+            6 => '10:30 - 11:00',
+        ];
+
+        $waktuJumatSiang = [
+            11 => '13:00 - 13:30',
+            12 => '13:30 - 14:00',
+            13 => '14:00 - 14:30',
+            14 => '14:30 - 15:00',
+            15 => '15:00 - 15:30',
+            16 => '15:30 - 16:00',
+            17 => '16:00 - 16:30',
+        ];
       @endphp
 
       <div class="container-fluid px-0 {{ !$loop->last ? 'page-break' : '' }}">
@@ -148,7 +166,7 @@
           </div>
         </div>
 
-        @foreach ($shifts as $shift)
+        @foreach ($shifts as $key => $shift)
           @if ($shift['slots']->count() > 0)
             <div class="shift-section mb-4">
               <div class="shift-title">{{ $shift['label'] }}</div>
@@ -162,6 +180,25 @@
                   </tr>
                 </thead>
                 <tbody>
+
+                  {{-- JAM KE-0 KHUSUS PAGI --}}
+                  @if ($key == 'Pagi')
+                    <tr>
+                      <td class="cell-jam">
+                        Jam ke-0<br>
+                      </td>
+                      @foreach ($days as $day)
+                        @if ($day == 'Senin')
+                          <td class="align-middle"><b>UPACARA BENDERA</b></td>
+                        @elseif ($day == 'Jumat')
+                          <td class="align-middle"><b>ISTIGHOSAH</b></td>
+                        @else
+                          <td class="bg-kosong">-</td>
+                        @endif
+                      @endforeach
+                    </tr>
+                  @endif
+
                   @foreach ($shift['slots'] as $slot)
                     <tr>
                       <td class="cell-jam">
@@ -176,9 +213,15 @@
                           <td class="cell-day">
                             @if (isset($matrixId[$slot->id][$day]))
                               @php $s = $matrixId[$slot->id][$day]; @endphp
+
                               @if ($day == 'Jumat' && $slot->slot_number <= 6)
-                                <span style="display:block; font-size:8px; border-bottom: 1px solid #000; margin-bottom:3px; font-weight:bold;">{{ $waktuJumat[$slot->slot_number] ?? '' }}</span>
+                                <span style="display:block; font-size:8px; border-bottom: 1px solid #000; margin-bottom:3px; font-weight:bold;">{{ $waktuJumatPagi[$slot->slot_number] ?? '' }}</span>
                               @endif
+
+                              @if ($day == 'Jumat' && $slot->slot_number >= 11)
+                                <span style="display:block; font-size:8px; border-bottom: 1px solid #000; margin-bottom:3px; font-weight:bold;">{{ $waktuJumatSiang[$slot->slot_number] ?? '' }}</span>
+                              @endif
+
                               <span class="text-mapel">{{ $s->mapel->nama_mapel }}</span>
                               <span class="text-guru">{{ $s->guru->nama_guru }}</span>
                             @else

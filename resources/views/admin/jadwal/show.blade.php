@@ -75,13 +75,25 @@
             ],
         ];
 
-        $waktuJumat = [
-            1 => '07:00 - 07:30',
-            2 => '07:30 - 08:00',
-            3 => '08:00 - 08:30',
-            4 => '08:45 - 09:15',
-            5 => '09:15 - 09:45',
-            6 => '09:45 - 10:15',
+        // Daftar Waktu Pagi Khusus Jumat
+        $waktuJumatPagi = [
+            1 => '07:30 - 08:00',
+            2 => '08:00 - 08:30',
+            3 => '08:30 - 09:00',
+            4 => '09:30 - 10:00',
+            5 => '10:00 - 10:30',
+            6 => '10:30 - 11:00',
+        ];
+
+        // Daftar Waktu Siang Khusus Jumat (Dimulai jam 13:00)
+        $waktuJumatSiang = [
+            11 => '13:00 - 13:30',
+            12 => '13:30 - 14:00',
+            13 => '14:00 - 14:30',
+            14 => '14:30 - 15:00',
+            15 => '15:00 - 15:30',
+            16 => '15:30 - 16:00',
+            17 => '16:00 - 16:30',
         ];
       @endphp
 
@@ -103,6 +115,29 @@
                     </tr>
                   </thead>
                   <tbody>
+
+                    {{-- TAMBAHAN: BARIS JAM KE-0 (Khusus Shift Pagi) --}}
+                    @if ($shiftKey == 'Pagi')
+                      <tr class="table-info">
+                        <td>
+                          <b class="text-nowrap text-dark">Jam ke-0</b><br>
+                        </td>
+                        @foreach ($days as $day)
+                          @if ($day == 'Senin')
+                            <td class="align-middle">
+                              <b class="text-primary" style="letter-spacing: 1px;"><i class="fas fa-flag me-1"></i> UPACARA BENDERA</b>
+                            </td>
+                          @elseif ($day == 'Jumat')
+                            <td class="align-middle">
+                              <b class="text-success" style="letter-spacing: 1px;"><i class="fas fa-praying-hands me-1"></i> ISTIGHOSAH</b>
+                            </td>
+                          @else
+                            <td class="text-muted" style="background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 10px, #e9ecef 10px, #e9ecef 20px);">-</td>
+                          @endif
+                        @endforeach
+                      </tr>
+                    @endif
+
                     @foreach ($shift['data'] as $slot)
                       <tr>
                         <td>
@@ -123,9 +158,17 @@
 
                                 <div class="card mb-0 shadow-sm border">
                                   <div class="card-body p-2 text-center">
+                                    {{-- Lencana Waktu Khusus Jumat Pagi --}}
                                     @if ($day == 'Jumat' && $slot->slot_number <= 6)
                                       <span class="badge bg-light-info text-dark border border-info mb-2 d-block">
-                                        <i class="far fa-clock me-1"></i> {{ $waktuJumat[$slot->slot_number] ?? '' }}
+                                        <i class="far fa-clock me-1"></i> {{ $waktuJumatPagi[$slot->slot_number] ?? '' }}
+                                      </span>
+                                    @endif
+
+                                    {{-- Lencana Waktu Khusus Jumat Siang --}}
+                                    @if ($day == 'Jumat' && $slot->slot_number >= 11)
+                                      <span class="badge bg-light-info text-dark border border-info mb-2 d-block">
+                                        <i class="far fa-clock me-1"></i> {{ $waktuJumatSiang[$slot->slot_number] ?? '' }}
                                       </span>
                                     @endif
 

@@ -80,6 +80,28 @@
       </div>
     </div>
 
+    @php
+      // Variabel waktu khusus hari Jumat
+      $waktuJumatPagi = [
+          1 => '07:30 - 08:00',
+          2 => '08:00 - 08:30',
+          3 => '08:30 - 09:00',
+          4 => '09:30 - 10:00',
+          5 => '10:00 - 10:30',
+          6 => '10:30 - 11:00',
+      ];
+
+      $waktuJumatSiang = [
+          11 => '13:00 - 13:30',
+          12 => '13:30 - 14:00',
+          13 => '14:00 - 14:30',
+          14 => '14:30 - 15:00',
+          15 => '15:00 - 15:30',
+          16 => '15:30 - 16:00',
+          17 => '16:00 - 16:30',
+      ];
+    @endphp
+
     <div class="table-responsive">
       <table class="table-bw text-center align-middle">
         <thead>
@@ -106,7 +128,20 @@
                   @endif
 
                   <td class="fw-bold">Jam ke-{{ $j->slotJam->slot_number }}</td>
-                  <td>{{ substr($j->slotJam->start_time, 0, 5) }} - {{ substr($j->slotJam->end_time, 0, 5) }}</td>
+
+                  {{-- Kondisi Waktu: Khusus Jumat atau Normal --}}
+                  <td>
+                    @if ($day == 'Jumat')
+                      @if ($j->slotJam->slot_number <= 6)
+                        {{ $waktuJumatPagi[$j->slotJam->slot_number] ?? '' }}
+                      @elseif ($j->slotJam->slot_number >= 11)
+                        {{ $waktuJumatSiang[$j->slotJam->slot_number] ?? '' }}
+                      @endif
+                    @else
+                      {{ substr($j->slotJam->start_time, 0, 5) }} - {{ substr($j->slotJam->end_time, 0, 5) }}
+                    @endif
+                  </td>
+
                   <td class="fw-bold">{{ $j->mapel->nama_mapel }}</td>
                   <td>{{ $j->guru->nama_guru }}</td>
                 </tr>
