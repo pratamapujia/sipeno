@@ -17,10 +17,14 @@ use App\Http\Controllers\SlotJamController;
 use App\Http\Controllers\TahunAjaranController;
 use Illuminate\Support\Facades\Route;
 
+
 // Guest
 Route::middleware(['guest'])->group(function () {
     Route::get('/', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.proses');
+    Route::get('/tes-error', function () {
+        abort(404); // Ganti angkanya untuk mengetes 403, 404, atau 500
+    });
 });
 
 // Authenticated Role
