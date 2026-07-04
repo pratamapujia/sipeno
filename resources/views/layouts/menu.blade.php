@@ -2,8 +2,18 @@
   <div class="sidebar-wrapper active">
     <div class="sidebar-header position-relative">
       <div class="d-flex justify-content-between align-items-center">
+        {{-- <div class="logo">
+          <a href="">SIPENO</a>
+        </div> --}}
         <div class="logo">
-          <a href="/">SIPENO</a>
+          <a href="javascript:void(0);" class="d-flex flex-column justify-content-center">
+            <span style="font-size: 1.2rem; letter-spacing: 0.5px;">
+              SPRISDA (SISPENO)</span>
+            </span>
+            <span class="text-secondary fw-light" style="font-size: 0.68rem; letter-spacing: 0.7px; text-transform: uppercase;">
+              Sistem Penjadwalan Otomatis
+            </span>
+          </a>
         </div>
         <div class="sidebar-toggler  x">
           <a href="javascript:void(0);" class="sidebar-hide d-xl-none d-block"><i class="bi bi-x bi-middle"></i></a>
