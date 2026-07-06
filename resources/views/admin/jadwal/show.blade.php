@@ -90,10 +90,9 @@
             11 => '13:00 - 13:30',
             12 => '13:30 - 14:00',
             13 => '14:00 - 14:30',
-            14 => '14:30 - 15:00',
-            15 => '15:00 - 15:30',
-            16 => '15:30 - 16:00',
-            17 => '16:00 - 16:30',
+            14 => '15:00 - 15:30',
+            15 => '15:30 - 16:00',
+            16 => '16:00 - 16:30',
         ];
       @endphp
 
@@ -148,7 +147,7 @@
 
                         @foreach ($days as $day)
                           <td>
-                            @if ($day == 'Jumat' && $slot->slot_number >= 7 && $slot->slot_number <= 10)
+                            @if ($day == 'Jumat' && (($slot->slot_number >= 7 && $slot->slot_number <= 10) || $slot->slot_number == 17))
                               <div class="text-center text-muted p-3 border rounded" style="background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 10px, #e9ecef 10px, #e9ecef 20px);">
                                 <i class="fas fa-ban mb-1 d-block text-secondary"></i> <small>KOSONG</small>
                               </div>
@@ -273,6 +272,34 @@
                           @foreach ($days as $day)
                             @if ($day != 'Jumat')
                               <td class="align-middle"><b class="text-dark" style="letter-spacing: 2px;">ISTIRAHAT 2</b></td>
+                            @else
+                              <td class="text-muted" style="background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 10px, #e9ecef 10px, #e9ecef 20px);">-</td>
+                            @endif
+                          @endforeach
+                        </tr>
+                      @endif
+
+                      {{-- SISIPAN: ISTIRAHAT JUMAT SIANG (Setelah Jam ke-13) --}}
+                      @if ($slot->slot_number == 13)
+                        <tr class="table-warning">
+                          <td class="align-middle"><b class="text-dark"><i class="fas fa-coffee me-1"></i> ISTIRAHAT</b></td>
+                          @foreach ($days as $day)
+                            @if ($day == 'Jumat')
+                              <td class="align-middle"><b class="text-dark" style="letter-spacing: 2px;">ISTIRAHAT JUMAT</b></td>
+                            @else
+                              <td class="text-muted" style="background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 10px, #e9ecef 10px, #e9ecef 20px);">-</td>
+                            @endif
+                          @endforeach
+                        </tr>
+                      @endif
+
+                      {{-- SISIPAN: ISTIRAHAT SIANG SENIN-KAMIS (Setelah Jam ke-14) --}}
+                      @if ($slot->slot_number == 14)
+                        <tr class="table-warning">
+                          <td class="align-middle"><b class="text-dark"><i class="fas fa-coffee me-1"></i> ISTIRAHAT</b></td>
+                          @foreach ($days as $day)
+                            @if ($day != 'Jumat')
+                              <td class="align-middle"><b class="text-dark" style="letter-spacing: 2px;">ISTIRAHAT SIANG</b></td>
                             @else
                               <td class="text-muted" style="background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 10px, #e9ecef 10px, #e9ecef 20px);">-</td>
                             @endif

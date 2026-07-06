@@ -11,7 +11,7 @@
               SPRISDA (SISPENO)</span>
             </span>
             <span class="text-secondary fw-light" style="font-size: 0.68rem; letter-spacing: 0.7px; text-transform: uppercase;">
-              Sistem Penjadwalan Otomatis
+              Sistem Penjadwalan Online
             </span>
           </a>
         </div>

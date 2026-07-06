@@ -146,10 +146,9 @@
             11 => '13:00 - 13:30',
             12 => '13:30 - 14:00',
             13 => '14:00 - 14:30',
-            14 => '14:30 - 15:00',
-            15 => '15:00 - 15:30',
-            16 => '15:30 - 16:00',
-            17 => '16:00 - 16:30',
+            14 => '15:00 - 15:30',
+            15 => '15:30 - 16:00',
+            16 => '16:00 - 16:30',
         ];
       @endphp
 
@@ -207,7 +206,7 @@
                       </td>
 
                       @foreach ($days as $day)
-                        @if ($day == 'Jumat' && $slot->slot_number >= 7 && $slot->slot_number <= 10)
+                        @if ($day == 'Jumat' && (($slot->slot_number >= 7 && $slot->slot_number <= 10) || $slot->slot_number == 17))
                           <td class="bg-kosong">-</td>
                         @else
                           <td class="cell-day">
@@ -273,6 +272,34 @@
                         @endforeach
                       </tr>
                     @endif
+
+                    {{-- SISIPAN: ISTIRAHAT JUMAT SIANG (Setelah Jam ke-13) --}}
+                    @if ($slot->slot_number == 13)
+                      <tr class="bg-istirahat-row">
+                        <td>ISTIRAHAT</td>
+                        @foreach ($days as $day)
+                          @if ($day == 'Jumat')
+                            <td>ISTIRAHAT JUMAT SIANG</td>
+                          @else
+                            <td class="bg-kosong">-</td>
+                          @endif
+                        @endforeach
+                      </tr>
+                    @endif
+
+                    {{-- SISIPAN: ISTIRAHAT SIANG SENIN-KAMIS (Setelah Jam ke-14) --}}
+                    @if ($slot->slot_number == 14)
+                      <tr class="bg-istirahat-row">
+                        <td>ISTIRAHAT</td>
+                        @foreach ($days as $day)
+                          @if ($day != 'Jumat')
+                            <td>ISTIRAHAT SIANG</td>
+                          @else
+                            <td class="bg-kosong">-</td>
+                          @endif
+                        @endforeach
+                      </tr>
+                    @endif
                   @endforeach
                 </tbody>
               </table>
@@ -282,14 +309,9 @@
 
         <div class="row mt-4" style="page-break-inside: avoid; color: #000;">
           <div class="col-6 text-center">
-            <p class="mb-1">Mengetahui,</p>
-            <p style="margin-bottom: 80px;">Wali Kelas {{ $kelas->nama_kelas }}</p>
-            <p class="fw-bold text-decoration-underline mb-0">{{ $kelas->waliKelas->nama_guru ?? '_______________________' }}</p>
-          </div>
-          <div class="col-6 text-center">
             <p class="mb-1">Sidoarjo, {{ now()->translatedFormat('d F Y') }}</p>
-            <p style="margin-bottom: 80px;">Waka Kurikulum</p>
-            <p class="fw-bold text-decoration-underline mb-0">{{ Auth::user()->name }}</p>
+            <p style="margin-bottom: 80px;">Kepala Sekolah</p>
+            <p class="fw-bold text-decoration-underline mb-0">Drs. Bahrul Ulum, M.Si</p>
           </div>
         </div>
       </div>

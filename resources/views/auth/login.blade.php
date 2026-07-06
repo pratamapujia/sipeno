@@ -44,10 +44,13 @@
               <div class="card-body p-5">
 
                 <div class="text-center mb-5">
-                  <div class="auth-logo mb-3">
-                    <h2 class="text-primary font-bold mb-0">
-                      <i class="fas fa-calendar-alt me-2"></i> SIPENO
-                    </h2>
+                  <div class="auth-logo mb-3 d-flex flex-column justify-content-center">
+                    <h2 style="letter-spacing: 0.5px;">
+                      SPRISDA (SISPENO)</h2>
+                    </span>
+                    <h6 class="text-secondary fw-light" style="letter-spacing: 0.7px; text-transform: uppercase;">
+                      Sistem Penjadwalan Online
+                    </h6>
                   </div>
                   <h4 class="auth-title fs-3">Masuk</h4>
                   <p class="auth-subtitle fs-6 text-muted">Silakan masuk menggunakan akun yang telah didaftarkan oleh Admin.</p>

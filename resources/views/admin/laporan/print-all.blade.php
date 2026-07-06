@@ -75,13 +75,13 @@
     @php
       // Variabel waktu khusus hari Jumat
       $waktuJumatPagi = [
-            1 => '07:30 - 08:00',
-            2 => '08:00 - 08:30',
-            3 => '08:30 - 09:00',
-            4 => '09:30 - 10:00',
-            5 => '10:00 - 10:30',
-            6 => '10:30 - 11:00',
-        ];
+          1 => '07:30 - 08:00',
+          2 => '08:00 - 08:30',
+          3 => '08:30 - 09:00',
+          4 => '09:30 - 10:00',
+          5 => '10:00 - 10:30',
+          6 => '10:30 - 11:00',
+      ];
 
       $waktuJumatSiang = [
           11 => '13:00 - 13:30',
@@ -166,8 +166,9 @@
         <div class="col-8"></div>
         <div class="col-4 text-center">
           <p class="mb-1">Sidoarjo, {{ now()->translatedFormat('d F Y') }}</p>
-          <p style="margin-bottom: 80px;">Waka Kurikulum</p>
-          <p class="fw-bold text-decoration-underline mb-0">{{ Auth::user()->name }}</p>
+          <p class="mb-2">Kepala Sekolah</p>
+          <img src="{{ asset('assets/static/images/ttd.jpeg') }}" alt="TTD Kepala Sekolah" style="width: 80px; height: 80px; margin: 5px auto; display: block;">
+          <p class="fw-bold text-decoration-underline mb-0">Drs. Bahrul Ulum, M.Si</p>
         </div>
       </div>
 

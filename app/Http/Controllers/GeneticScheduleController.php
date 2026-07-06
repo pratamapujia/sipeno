@@ -218,8 +218,8 @@ class GeneticScheduleController extends Controller
         }
 
         // --- VALIDASI BARU 4: Aturan Zona Kosong Jumat ---
-        if ($request->day === 'Jumat' && $slotNumber >= 7 && $slotNumber <= 10) {
-            return redirect()->back()->with('error', 'Gagal memindah! Jam ke-7 hingga 10 pada hari Jumat adalah jam kosong / waktu istirahat ibadah.');
+        if ($request->day === 'Jumat' && (($slotNumber >= 7 && $slotNumber <= 10) || $slotNumber == 17)) {
+            return redirect()->back()->with('error', 'Gagal memindah! Jam ke-7 s/d 10 dan Jam ke-17 pada hari Jumat adalah jam kosong / di luar waktu efektif.');
         }
 
         // --- VALIDASI BARU 5: Aturan Tipe Mapel (Teori vs Praktikum) ---

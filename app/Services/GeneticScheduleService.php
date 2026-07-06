@@ -30,9 +30,9 @@ class GeneticScheduleService
     // 1. Kolam Normal (Senin - Kamis): Menggunakan semua slot 1 s/d 17
     $slotsNormal = $allActiveSlots->pluck('id')->toArray();
 
-    // 2. Kolam Jumat: Hanya slot 1-6 (Pagi) DAN 11-17 (Siang). Slot 7-10 dibuang dari pengacakan Jumat.
+    // 2. Kolam Jumat: Hanya slot 1-6 (Pagi) DAN 11-16 (Siang). Slot 7-10 dibuang dari pengacakan Jumat.
     $slotsJumat = $allActiveSlots->filter(function ($slot) {
-      return $slot->slot_number <= 6 || $slot->slot_number >= 11;
+      return $slot->slot_number <= 6 || ($slot->slot_number >= 11 && $slot->slot_number <= 16);
     })->pluck('id')->toArray();
 
     $guruMapel = GuruMapel::with('mapel')->where('tahun_ajaran_id', $academicYearId)->get()->toArray();
@@ -198,7 +198,7 @@ class GeneticScheduleService
         // --- ATURAN SHIFT (NORMAL VS JUMAT) ---
         if ($g['day'] === 'Jumat') {
           // Zona Mati Jumat (Slot 7, 8, 9, 10 dilarang ada jadwal)
-          if ($nomorJam > 6 && $nomorJam <= 10) {
+          if (($nomorJam > 6 && $nomorJam <= 10) || $nomorJam > 16) {
             $penalty -= 1000;
           }
           // Teori maksimal jam 6, Praktikum harus >= 11
@@ -353,8 +353,8 @@ class GeneticScheduleService
 
       // --- Diagnosa Shift & Zona Jumat ---
       if ($hari === 'Jumat') {
-        if ($jamKe > 6 && $jamKe <= 10) {
-          $pesan[] = "ATURAN JUMAT: <b>{$namaMapel} ({$namaKelas})</b> masuk di zona terlarang (Slot 7-10 Jumat).";
+        if (($jamKe > 6 && $jamKe <= 10) || $jamKe > 16) {
+          $pesan[] = "ATURAN JUMAT: {$namaMapel} ({$namaKelas}) masuk di zona terlarang (Slot 7-10 atau 17 Jumat).";
         }
         if ($tipeMapel === 'teori' && $jamKe > 6) {
           $pesan[] = "ATURAN SHIFT JUMAT: Mapel Teori <b>{$namaMapel} ({$namaKelas})</b> melewati batas 6 JP (Terplot di Jam ke-{$jamKe}).";
