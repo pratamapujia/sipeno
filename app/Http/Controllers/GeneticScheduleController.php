@@ -227,9 +227,9 @@ class GeneticScheduleController extends Controller
         if ($tipeMapel === 'teori' && $slotNumber > 10) {
             return redirect()->back()->with('error', 'Gagal memindah! Mapel Teori wajib ditaruh di Shift Pagi (Jam ke-1 s/d 10).');
         }
-        if ($tipeMapel === 'praktikum' && $slotNumber <= 10) {
-            return redirect()->back()->with('error', 'Gagal memindah! Mapel Praktikum wajib ditaruh di Shift Siang (Jam ke-11 s/d 17).');
-        }
+        // if ($tipeMapel === 'praktikum' && $slotNumber <= 10) {
+        //     return redirect()->back()->with('error', 'Gagal memindah! Mapel Praktikum wajib ditaruh di Shift Siang (Jam ke-11 s/d 17).');
+        // }
 
         // --- VALIDASI BARU 6: Karantina Eksklusif Shift Harian ---
         // Cek apakah di hari tujuan, kelas ini sudah punya mapel di shift lain

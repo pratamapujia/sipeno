@@ -201,13 +201,11 @@ class GeneticScheduleService
           if (($nomorJam > 6 && $nomorJam <= 10) || $nomorJam > 16) {
             $penalty -= 1000;
           }
-          // Teori maksimal jam 6, Praktikum harus >= 11
+          // Teori maksimal jam 6 (Praktikum dibebaskan, boleh pagi boleh siang)
           if ($tipeMapel === 'teori' && $nomorJam > 6) $penalty -= 500;
-          if ($tipeMapel === 'praktikum' && $nomorJam <= 10) $penalty -= 500;
         } else {
-          // Aturan Shift Senin - Kamis (Teori <= 10, Praktikum >= 11)
+          // Aturan Shift Senin - Kamis (Teori <= 10) (Praktikum dibebaskan)
           if ($tipeMapel === 'teori' && $nomorJam > 10) $penalty -= 500;
-          if ($tipeMapel === 'praktikum' && $nomorJam <= 10) $penalty -= 500;
         }
 
         if (isset($guruPiket[$g['guru_id']]) && in_array($g['day'], $guruPiket[$g['guru_id']])) {
@@ -359,16 +357,12 @@ class GeneticScheduleService
         if ($tipeMapel === 'teori' && $jamKe > 6) {
           $pesan[] = "ATURAN SHIFT JUMAT: Mapel Teori <b>{$namaMapel} ({$namaKelas})</b> melewati batas 6 JP (Terplot di Jam ke-{$jamKe}).";
         }
-        if ($tipeMapel === 'praktikum' && $jamKe <= 10) {
-          $pesan[] = "ATURAN SHIFT JUMAT: Mapel Praktikum <b>{$namaMapel} ({$namaKelas})</b> terpaksa ditaruh di Jam Pagi (Jam ke-{$jamKe}).";
-        }
+        // Diagnosa praktikum tidak boleh di pagi dihapus
       } else {
         if ($tipeMapel === 'teori' && $jamKe > 10) {
           $pesan[] = "ATURAN SHIFT: Mapel Teori <b>{$namaMapel} ({$namaKelas})</b> terpaksa ditaruh di Jam Siang (Jam ke-{$jamKe}).";
         }
-        if ($tipeMapel === 'praktikum' && $jamKe <= 10) {
-          $pesan[] = "ATURAN SHIFT: Mapel Praktikum <b>{$namaMapel} ({$namaKelas})</b> terpaksa ditaruh di Jam Pagi (Jam ke-{$jamKe}).";
-        }
+        // Diagnosa praktikum tidak boleh di pagi dihapus
       }
 
       if (isset($availabilities[$g['guru_id']])) {
