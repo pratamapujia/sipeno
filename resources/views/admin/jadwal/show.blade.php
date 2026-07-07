@@ -64,18 +64,32 @@
       @php
         $shiftGroups = [
             'Pagi' => [
-                'title' => 'Shift Pagi (Mapel Teori | Slot 1 - 10)',
+                'title' => 'Shift Pagi (Slot 1 - 10)',
                 'icon' => 'fas fa-sun text-warning',
                 'data' => $slots->where('slot_number', '<=', 10),
             ],
             'Siang' => [
-                'title' => 'Shift Siang (Mapel Praktikum | Slot 11 - 17)',
+                'title' => 'Shift Siang (Slot 11 - 17)',
                 'icon' => 'fas fa-cloud-sun text-info',
                 'data' => $slots->where('slot_number', '>', 10),
             ],
         ];
 
-        // Daftar Waktu Pagi Khusus Jumat
+        // Daftar Waktu Pagi Khusus Senin
+        $waktuSeninPagi = [
+            1 => '07:30 - 08:00',
+            2 => '08:00 - 08:30',
+            3 => '08:30 - 09:00',
+            4 => '09:00 - 09:30',
+            5 => '10:00 - 10:35',
+            6 => '10:35 - 11:10',
+            7 => '11:10 - 11:45',
+            8 => '12:15 - 12:50',
+            9 => '12:50 - 13:25',
+            10 => '13:25 - 14:00',
+        ];
+
+        // Daftar Waktu Pagi Khusus Jumat (Dimulai jam 07:30)
         $waktuJumatPagi = [
             1 => '07:30 - 08:00',
             2 => '08:00 - 08:30',
@@ -141,8 +155,8 @@
                       <tr>
                         <td>
                           <b class="text-nowrap text-dark">Jam ke-{{ $slot->slot_number }}</b><br>
-                          <small class="text-muted text-nowrap">{{ substr($slot->start_time, 0, 5) }} - {{ substr($slot->end_time, 0, 5) }}</small><br>
-                          <small class="text-danger" style="font-size: 10px;">(Senin-Kamis)</small>
+                          {{-- <small class="text-muted text-nowrap">{{ substr($slot->start_time, 0, 5) }} - {{ substr($slot->end_time, 0, 5) }}</small><br>
+                          <small class="text-danger" style="font-size: 10px;">(Senin-Kamis)</small> --}}
                         </td>
 
                         @foreach ($days as $day)
@@ -157,20 +171,26 @@
 
                                 <div class="card mb-0 shadow-sm border">
                                   <div class="card-body p-2 text-center">
-                                    {{-- Lencana Waktu Khusus Jumat Pagi --}}
-                                    @if ($day == 'Jumat' && $slot->slot_number <= 6)
+                                    {{-- Lencana Waktu Khusus Senin Pagi --}}
+                                    @if ($day == 'Senin' && $slot->slot_number <= 10)
+                                      <span class="badge bg-light-info text-dark border border-info mb-2 d-block">
+                                        <i class="far fa-clock me-1"></i> {{ $waktuSeninPagi[$slot->slot_number] ?? '' }}
+                                      </span>
+                                      {{-- Lencana Waktu Khusus Jumat Pagi --}}
+                                    @elseif ($day == 'Jumat' && $slot->slot_number <= 6)
                                       <span class="badge bg-light-info text-dark border border-info mb-2 d-block">
                                         <i class="far fa-clock me-1"></i> {{ $waktuJumatPagi[$slot->slot_number] ?? '' }}
                                       </span>
-                                    @endif
-
-                                    {{-- Lencana Waktu Khusus Jumat Siang --}}
-                                    @if ($day == 'Jumat' && $slot->slot_number >= 11)
+                                      {{-- Lencana Waktu Khusus Jumat Siang --}}
+                                    @elseif ($day == 'Jumat' && $slot->slot_number >= 11)
                                       <span class="badge bg-light-info text-dark border border-info mb-2 d-block">
                                         <i class="far fa-clock me-1"></i> {{ $waktuJumatSiang[$slot->slot_number] ?? '' }}
                                       </span>
+                                    @else
+                                      <span class="badge bg-light-info text-dark border border-info mb-2 d-block">
+                                        <i class="far fa-clock me-1"></i> {{ substr($slot->start_time, 0, 5) . ' - ' . substr($slot->end_time, 0, 5) }}
+                                      </span>
                                     @endif
-
                                     <span class="fw-bold d-block text-primary">{{ $s->mapel->nama_mapel }}</span>
                                     <small class="text-dark d-block">{{ ucwords(strtolower($s->guru->nama_guru)) }}</small>
 

@@ -52,7 +52,7 @@
         }
 
         @page {
-          margin: 1cm;
+          margin: 0.5cm;
         }
       }
     </style>
@@ -68,20 +68,33 @@
       </div>
     </div>
 
-    <div class="text-center mb-4">
+    <div class="text-center mb-2">
       <img src="{{ asset('assets/static/images/kop-print.png') }}" alt="Kop Surat SMK PGRI 1 Sidoarjo" class="img-fluid w-100">
     </div>
 
     <div class="text-center mt-2">
       <h4 class="fw-bold text-uppercase text-dark">Jadwal Pelajaran Kelas {{ $kelas->nama_kelas }}</h4>
-      <div class="d-flex justify-content-between mt-5 text-start">
+      <div class="d-flex justify-content-between mt-2 text-start">
         <p><b>Tahun Ajaran:</b> {{ $academicYear->tahun_ajaran }} <br> <b>Semester:</b> {{ $academicYear->semester }}</p>
         <p><b>Wali Kelas:</b> {{ $kelas->waliKelas->nama_guru ?? 'Belum diatur' }}</p>
       </div>
     </div>
 
     @php
-      // Variabel waktu khusus hari Jumat
+
+      $waktuSeninPagi = [
+          1 => '07:30 - 08:00',
+          2 => '08:00 - 08:30',
+          3 => '08:30 - 09:00',
+          4 => '09:00 - 09:30',
+          5 => '10:00 - 10:35',
+          6 => '10:35 - 11:10',
+          7 => '11:10 - 11:45',
+          8 => '12:15 - 12:50',
+          9 => '12:50 - 13:25',
+          10 => '13:25 - 14:00',
+      ];
+
       $waktuJumatPagi = [
           1 => '07:30 - 08:00',
           2 => '08:00 - 08:30',
@@ -129,13 +142,17 @@
 
                   <td class="fw-bold">Jam ke-{{ $j->slotJam->slot_number }}</td>
 
-                  {{-- Kondisi Waktu: Khusus Jumat atau Normal --}}
+                  {{-- Kondisi Waktu: Khusus Jumat, Senin Pagi atau Normal --}}
                   <td>
                     @if ($day == 'Jumat')
                       @if ($j->slotJam->slot_number <= 6)
                         {{ $waktuJumatPagi[$j->slotJam->slot_number] ?? '' }}
                       @elseif ($j->slotJam->slot_number >= 11)
                         {{ $waktuJumatSiang[$j->slotJam->slot_number] ?? '' }}
+                      @endif
+                    @elseif ($day == 'Senin')
+                      @if ($j->slotJam->slot_number <= 10)
+                        {{ $waktuSeninPagi[$j->slotJam->slot_number] ?? '' }}
                       @endif
                     @else
                       {{ substr($j->slotJam->start_time, 0, 5) }} - {{ substr($j->slotJam->end_time, 0, 5) }}

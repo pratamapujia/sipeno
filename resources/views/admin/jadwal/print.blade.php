@@ -101,7 +101,7 @@
         }
 
         @page {
-          margin: 1cm;
+          margin: 0.5cm;
         }
       }
     </style>
@@ -133,13 +133,26 @@
       @php
         $shifts = [
             'Pagi' => [
-                'label' => 'SHIFT PAGI (Mapel Teori | Slot 1 s/d 10)',
+                'label' => 'SHIFT PAGI (Slot 1 s/d 10)',
                 'slots' => $slots->where('slot_number', '<=', 10),
             ],
             'Siang' => [
-                'label' => 'SHIFT SIANG (Mapel Praktikum | Slot 11 s/d 17)',
+                'label' => 'SHIFT SIANG (Slot 11 s/d 17)',
                 'slots' => $slots->where('slot_number', '>', 10),
             ],
+        ];
+
+        $waktuSeninPagi = [
+            1 => '07:30 - 08:00',
+            2 => '08:00 - 08:30',
+            3 => '08:30 - 09:00',
+            4 => '09:00 - 09:30',
+            5 => '10:00 - 10:35',
+            6 => '10:35 - 11:10',
+            7 => '11:10 - 11:45',
+            8 => '12:15 - 12:50',
+            9 => '12:50 - 13:25',
+            10 => '13:25 - 14:00',
         ];
 
         $waktuJumatPagi = [
@@ -164,7 +177,7 @@
       @foreach ($shifts as $key => $shift)
         @if ($shift['slots']->count() > 0)
           <div class="shift-section mb-4">
-            <div class="shift-title">{{ $shift['label'] }}</div>
+            {{-- <div class="shift-title">{{ $shift['label'] }}</div> --}}
             <table class="table-bw">
               <thead>
                 <tr>
@@ -198,7 +211,7 @@
                   <tr>
                     <td class="cell-jam">
                       Jam ke-{{ $slot->slot_number }}<br>
-                      <span style="font-size: 9px; font-weight: normal;">{{ substr($slot->start_time, 0, 5) }} - {{ substr($slot->end_time, 0, 5) }}</span>
+                      {{-- <span style="font-size: 9px; font-weight: normal;">{{ substr($slot->start_time, 0, 5) }} - {{ substr($slot->end_time, 0, 5) }}</span> --}}
                     </td>
 
                     @foreach ($days as $day)
@@ -209,12 +222,15 @@
                           @if (isset($jadwalMatrix[$slot->id][$day]))
                             @php $s = $jadwalMatrix[$slot->id][$day]; @endphp
 
-                            @if ($day == 'Jumat' && $slot->slot_number <= 6)
+                            @if ($day == 'Senin' && $slot->slot_number <= 10)
+                              <span style="display:block; font-size:8px; border-bottom: 1px solid #000; margin-bottom:3px; font-weight:bold;">{{ $waktuSeninPagi[$slot->slot_number] ?? '' }}</span>
+                            @elseif ($day == 'Jumat' && $slot->slot_number <= 6)
                               <span style="display:block; font-size:8px; border-bottom: 1px solid #000; margin-bottom:3px; font-weight:bold;">{{ $waktuJumatPagi[$slot->slot_number] ?? '' }}</span>
-                            @endif
-
-                            @if ($day == 'Jumat' && $slot->slot_number >= 11)
+                            @elseif ($day == 'Jumat' && $slot->slot_number >= 11)
                               <span style="display:block; font-size:8px; border-bottom: 1px solid #000; margin-bottom:3px; font-weight:bold;">{{ $waktuJumatSiang[$slot->slot_number] ?? '' }}</span>
+                            @else
+                              <span style="display:block; font-size:8px; border-bottom: 1px solid #000; margin-bottom:3px; font-weight:bold;">{{ substr($slot->start_time, 0, 5) }} -
+                                {{ substr($slot->end_time, 0, 5) }}</span>
                             @endif
 
                             <span class="text-mapel">{{ $s->mapel->nama_mapel }}</span>
@@ -275,7 +291,7 @@
                       <td>ISTIRAHAT</td>
                       @foreach ($days as $day)
                         @if ($day == 'Jumat')
-                          <td>ISTIRAHAT JUMAT SIANG</td>
+                          <td>ISTIRAHAT JUMAT</td>
                         @else
                           <td class="bg-kosong">-</td>
                         @endif
@@ -304,7 +320,8 @@
       @endforeach
 
       <div class="row mt-4" style="page-break-inside: avoid; color: #000;">
-        <div class="col-6 text-center">
+        <div class="col-8"></div>
+        <div class="col-4 text-center">
           <p class="mb-1">Sidoarjo, {{ now()->translatedFormat('d F Y') }}</p>
           <p style="margin-bottom: 80px;">Kepala Sekolah</p>
           <p class="fw-bold text-decoration-underline mb-0">Drs. Bahrul Ulum, M.Si</p>
