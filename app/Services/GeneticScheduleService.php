@@ -178,33 +178,43 @@ class GeneticScheduleService
       $checkGuru = [];
       $checkKelas = [];
       $kelasJadwalHari = [];
+      $jadwalTeamTeaching = []; // Penampung jadwal praktikum untuk sinkronisasi
 
       foreach ($individu['jadwal'] as $g) {
-        $keyGuru = "{$g['day']}_{$g['time_slot_id']}_{$g['guru_id']}";
-        $keyKelas = "{$g['day']}_{$g['time_slot_id']}_{$g['kelas_id']}";
-
-        if (isset($checkGuru[$keyGuru])) $penalty -= 500;
-        $checkGuru[$keyGuru] = true;
-
-        if (isset($checkKelas[$keyKelas])) $penalty -= 500;
-        $checkKelas[$keyKelas] = true;
-
         $tipeMapel = $mapelTypes[$g['mapel_id']] ?? 'teori';
         $nomorJam = $slotDetails[$g['time_slot_id']]['slot_number'] ?? 1;
         $isIstirahat = $slotDetails[$g['time_slot_id']]['is_istirahat'] ?? false;
 
+        $keyGuru = "{$g['day']}_{$g['time_slot_id']}_{$g['guru_id']}";
+        $keyKelas = "{$g['day']}_{$g['time_slot_id']}_{$g['kelas_id']}";
+
+        // Cek Bentrok Guru
+        if (isset($checkGuru[$keyGuru])) $penalty -= 500;
+        $checkGuru[$keyGuru] = true;
+
+        // Cek Bentrok Kelas (Pengecualian untuk Team Teaching Praktikum)
+        if (isset($checkKelas[$keyKelas])) {
+          $existing = $checkKelas[$keyKelas];
+          if ($existing['mapel_id'] == $g['mapel_id'] && $existing['tipe'] === 'praktikum' && $tipeMapel === 'praktikum' && $existing['guru_id'] != $g['guru_id']) {
+            // Diizinkan (Team Teaching), jangan beri penalti
+          } else {
+            $penalty -= 500;
+          }
+        } else {
+          $checkKelas[$keyKelas] = [
+            'mapel_id' => $g['mapel_id'],
+            'tipe' => $tipeMapel,
+            'guru_id' => $g['guru_id']
+          ];
+        }
+
         if ($isIstirahat) $penalty -= 500;
 
-        // --- ATURAN SHIFT (NORMAL VS JUMAT) ---
+        // Aturan Shift
         if ($g['day'] === 'Jumat') {
-          // Zona Mati Jumat (Slot 7, 8, 9, 10 dilarang ada jadwal)
-          if (($nomorJam > 6 && $nomorJam <= 10) || $nomorJam > 16) {
-            $penalty -= 1000;
-          }
-          // Teori maksimal jam 6 (Praktikum dibebaskan, boleh pagi boleh siang)
+          if (($nomorJam > 6 && $nomorJam <= 10) || $nomorJam > 16) $penalty -= 1000;
           if ($tipeMapel === 'teori' && $nomorJam > 6) $penalty -= 500;
         } else {
-          // Aturan Shift Senin - Kamis (Teori <= 10) (Praktikum dibebaskan)
           if ($tipeMapel === 'teori' && $nomorJam > 10) $penalty -= 500;
         }
 
@@ -219,33 +229,59 @@ class GeneticScheduleService
 
         if (isset($availabilities[$g['guru_id']])) {
           foreach ($availabilities[$g['guru_id']] as $av) {
-            // PERUBAHAN: Cek hari, slot jam, DAN kelas yang spesifik
             if ($av['day'] === $g['day'] && $av['time_slot_id'] === $g['time_slot_id'] && $av['kelas_id'] == $g['kelas_id']) {
               $penalty -= 15;
             }
           }
         }
+
+        // Kumpulkan data praktikum untuk sinkronisasi Team Teaching
+        if ($tipeMapel === 'praktikum') {
+          $keyTeam = "{$g['kelas_id']}_{$g['mapel_id']}";
+          $jadwalTeamTeaching[$keyTeam][] = $g;
+        }
       }
 
-      // --- ATURAN SHIFT EKSKLUSIF HARIAN ---
-      foreach ($kelasJadwalHari as $kelasId => $hariData) {
-        foreach ($hariData as $hari => $daftarJadwal) {
-          $adaPagi = false;
-          $adaSiang = false;
+      // --- SINKRONISASI TEAM TEACHING ---
+      // Memaksa mesin agar 2 guru di mapel yang sama mengajar di slot yang sama persis
+      foreach ($jadwalTeamTeaching as $key => $jadwals) {
+        $guruGroups = [];
+        foreach ($jadwals as $jwd) {
+          $guruGroups[$jwd['guru_id']][] = $jwd;
+        }
 
-          foreach ($daftarJadwal as $jwd) {
-            if ($jwd['slot_number'] <= 10) $adaPagi = true;
-            if ($jwd['slot_number'] >= 11) $adaSiang = true;
-          }
+        if (count($guruGroups) > 1) {
+          $baseSlots = null;
+          foreach ($guruGroups as $guruId => $slotsArray) {
+            $currentSlots = [];
+            foreach ($slotsArray as $s) {
+              $currentSlots[] = $s['day'] . '_' . $s['time_slot_id'];
+            }
+            sort($currentSlots);
 
-          // Karantina Penuh: Jika kelas masuk pagi & siang sekaligus dalam 1 hari = Hancurkan Jadwal!
-          if ($adaPagi && $adaSiang) {
-            $penalty -= 1000;
+            if ($baseSlots === null) {
+              $baseSlots = $currentSlots;
+            } else {
+              if ($baseSlots !== $currentSlots) {
+                $penalty -= 1000; // Penalti mutlak jika jadwal mereka terpisah
+              }
+            }
           }
         }
       }
 
-      // Blok Berurutan
+      foreach ($kelasJadwalHari as $kelasId => $hariData) {
+        foreach ($hariData as $hari => $daftarJadwal) {
+          $adaPagi = false;
+          $adaSiang = false;
+          foreach ($daftarJadwal as $jwd) {
+            if ($jwd['slot_number'] <= 10) $adaPagi = true;
+            if ($jwd['slot_number'] >= 11) $adaSiang = true;
+          }
+          if ($adaPagi && $adaSiang) $penalty -= 1000;
+        }
+      }
+
       $kelompokBlock = [];
       foreach ($individu['jadwal'] as $g) {
         $keyBlok = "{$g['guru_id']}_{$g['mapel_id']}_{$g['kelas_id']}";
@@ -257,20 +293,16 @@ class GeneticScheduleService
 
       foreach ($kelompokBlock as $key => $jadwals) {
         if (count($jadwals) <= 1) continue;
-
         $hariPertama = $jadwals[0]['day'];
         $slotNumbers = [];
-
         foreach ($jadwals as $jwd) {
           if ($jwd['day'] !== $hariPertama) $penalty -= 200;
           $slotNumbers[] = $jwd['slot_number'];
         }
-
         sort($slotNumbers);
         for ($i = 0; $i < count($slotNumbers) - 1; $i++) {
           $idx1 = array_search($slotNumbers[$i], $activeSlots);
           $idx2 = array_search($slotNumbers[$i + 1], $activeSlots);
-
           if ($idx2 !== false && $idx1 !== false) {
             if (($idx2 - $idx1) !== 1) $penalty -= 200;
           }
@@ -316,6 +348,7 @@ class GeneticScheduleService
     $pesan = [];
     $checkGuru = [];
     $checkKelas = [];
+    $jadwalTeamTeaching = [];
 
     $gurus = Guru::pluck('nama_guru', 'id')->toArray();
     $kelas = Kelas::pluck('nama_kelas', 'id')->toArray();
@@ -324,7 +357,7 @@ class GeneticScheduleService
     $mapelNames = Mapel::pluck('nama_mapel', 'id')->toArray();
     $activeSlots = SlotJam::where('is_istirahat', false)->orderBy('slot_number')->pluck('slot_number')->toArray();
 
-    $kelasShiftLog = []; // Log untuk merekam kehadiran kelas (Pagi/Siang)
+    $kelasShiftLog = [];
 
     foreach ($jadwal as $g) {
       $namaGuru = $gurus[$g['guru_id']] ?? 'Guru Tidak Dikenal';
@@ -341,16 +374,26 @@ class GeneticScheduleService
       $checkGuru["{$hari}_{$jamKe}_{$g['guru_id']}"] = $namaKelas;
 
       if (isset($checkKelas["{$hari}_{$jamKe}_{$g['kelas_id']}"])) {
-        $guruSebelumnya = $checkKelas["{$hari}_{$jamKe}_{$g['kelas_id']}"];
-        $pesan[] = "<b>Kelas {$namaKelas}</b> bentrok! Diajar oleh <b>{$guruSebelumnya}</b> dan <b>{$namaGuru}</b> bersamaan pada <b>{$hari} Jam ke-{$jamKe}</b>.";
+        $existing = $checkKelas["{$hari}_{$jamKe}_{$g['kelas_id']}"];
+        if ($existing['mapel_id'] == $g['mapel_id'] && $existing['tipe'] === 'praktikum' && $tipeMapel === 'praktikum' && $existing['guru_id'] != $g['guru_id']) {
+          // Team teaching diizinkan
+        } else {
+          $guruSebelumnya = $existing['nama_guru'];
+          $pesan[] = "<b>Kelas {$namaKelas}</b> bentrok! Diajar oleh <b>{$guruSebelumnya}</b> dan <b>{$namaGuru}</b> bersamaan pada <b>{$hari} Jam ke-{$jamKe}</b>.";
+        }
+      } else {
+        $checkKelas["{$hari}_{$jamKe}_{$g['kelas_id']}"] = [
+          'nama_guru' => $namaGuru,
+          'mapel_id' => $g['mapel_id'],
+          'tipe' => $tipeMapel,
+          'guru_id' => $g['guru_id']
+        ];
       }
-      $checkKelas["{$hari}_{$jamKe}_{$g['kelas_id']}"] = $namaGuru;
 
       if (isset($guruPiket[$g['guru_id']]) && in_array($hari, $guruPiket[$g['guru_id']])) {
         $pesan[] = "ATURAN PIKET: <b>{$namaGuru}</b> jadwalnya terpaksa masuk pada hari <b>{$hari}</b> padahal sedang bertugas PIKET.";
       }
 
-      // --- Diagnosa Shift & Zona Jumat ---
       if ($hari === 'Jumat') {
         if (($jamKe > 6 && $jamKe <= 10) || $jamKe > 16) {
           $pesan[] = "ATURAN JUMAT: {$namaMapel} ({$namaKelas}) masuk di zona terlarang (Slot 7-10 atau 17 Jumat).";
@@ -358,12 +401,10 @@ class GeneticScheduleService
         if ($tipeMapel === 'teori' && $jamKe > 6) {
           $pesan[] = "ATURAN SHIFT JUMAT: Mapel Teori <b>{$namaMapel} ({$namaKelas})</b> melewati batas 6 JP (Terplot di Jam ke-{$jamKe}).";
         }
-        // Diagnosa praktikum tidak boleh di pagi dihapus
       } else {
         if ($tipeMapel === 'teori' && $jamKe > 10) {
           $pesan[] = "ATURAN SHIFT: Mapel Teori <b>{$namaMapel} ({$namaKelas})</b> terpaksa ditaruh di Jam Siang (Jam ke-{$jamKe}).";
         }
-        // Diagnosa praktikum tidak boleh di pagi dihapus
       }
 
       if (isset($availabilities[$g['guru_id']])) {
@@ -374,12 +415,44 @@ class GeneticScheduleService
         }
       }
 
-      // Merekam Log Shift Harian
       $shiftTipe = ($jamKe <= 10) ? 'pagi' : 'siang';
       $kelasShiftLog[$g['kelas_id']][$hari][$shiftTipe] = true;
+
+      if ($tipeMapel === 'praktikum') {
+        $keyTeam = "{$g['kelas_id']}_{$g['mapel_id']}";
+        $jadwalTeamTeaching[$keyTeam][] = $g;
+      }
     }
 
-    // Diagnosa Shift Eksklusif
+    // Pesan error jika Team Teaching terpencar
+    foreach ($jadwalTeamTeaching as $key => $jadwals) {
+      $guruGroups = [];
+      foreach ($jadwals as $jwd) {
+        $guruGroups[$jwd['guru_id']][] = $jwd;
+      }
+      if (count($guruGroups) > 1) {
+        $baseSlots = null;
+        foreach ($guruGroups as $guruId => $slotsArray) {
+          $currentSlots = [];
+          foreach ($slotsArray as $s) {
+            $currentSlots[] = $s['day'] . '_' . $s['time_slot_id'];
+          }
+          sort($currentSlots);
+
+          if ($baseSlots === null) {
+            $baseSlots = $currentSlots;
+          } else {
+            if ($baseSlots !== $currentSlots) {
+              $namaKelas = $kelas[$slotsArray[0]['kelas_id']] ?? 'Kelas';
+              $namaMapel = $mapelNames[$slotsArray[0]['mapel_id']] ?? 'Mapel';
+              $pesan[] = "TEAM TEACHING: Guru-guru pada Praktikum <b>{$namaMapel} ({$namaKelas})</b> terpencar dan tidak mengajar di waktu yang bersamaan.";
+              break;
+            }
+          }
+        }
+      }
+    }
+
     foreach ($kelasShiftLog as $kelasId => $hariData) {
       foreach ($hariData as $hari => $shifts) {
         if (isset($shifts['pagi']) && isset($shifts['siang'])) {
@@ -402,27 +475,22 @@ class GeneticScheduleService
 
     foreach ($kelompokDiagnosa as $key => $jadwals) {
       if (count($jadwals) <= 1) continue;
-
       $hariPertama = $jadwals[0]['day'];
       $jamKeArr = [];
       $namaMapel = $jadwals[0]['namaMapel'];
       $namaKelas = $jadwals[0]['namaKelas'];
       $bedaHari = false;
-
       foreach ($jadwals as $jwd) {
         if ($jwd['day'] !== $hariPertama) $bedaHari = true;
         $jamKeArr[] = $jwd['jamKe'];
       }
-
       if ($bedaHari) {
         $pesan[] = "ATURAN BLOK: Mapel <b>{$namaMapel} ({$namaKelas})</b> terpencar di hari yang berbeda.";
       }
-
       sort($jamKeArr);
       for ($i = 0; $i < count($jamKeArr) - 1; $i++) {
         $idx1 = array_search($jamKeArr[$i], $activeSlots);
         $idx2 = array_search($jamKeArr[$i + 1], $activeSlots);
-
         if ($idx2 !== false && $idx1 !== false) {
           if (($idx2 - $idx1) !== 1) {
             $pesan[] = "ATURAN BLOK: Jam mengajar <b>{$namaMapel} ({$namaKelas})</b> bolong/tidak berurutan (Terplot di jam {$jamKeArr[$i]} dan {$jamKeArr[$i + 1]}).";

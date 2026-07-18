@@ -84,7 +84,7 @@
           <li class="sidebar-item {{ request()->is('admin/guruFree', 'admin/guruFree/*') ? 'active' : '' }} ">
             <a href="{{ route('admin.guruFree.index') }}" class='sidebar-link'>
               <i class="bi bi-file-lock2"></i>
-              <span>Berhalangan Mengajar</span>
+              <span>Ketersediaan Mengajar</span>
             </a>
           </li>
           <li class="sidebar-item {{ request()->is('admin/jadwal', 'admin/jadwal/*') ? 'active' : '' }}">

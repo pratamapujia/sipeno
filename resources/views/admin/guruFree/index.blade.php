@@ -11,12 +11,15 @@
     <div class="page-title">
       <div class="row">
         <div class="col-12 col-md-8 order-md-1 order-last">
-          <h3>Atur Waktu Berhalangan Mengajar</h3>
-          <p class="text-subtitle text-muted">Centang pada kotak di mana guru yang bersangkutan <b>TIDAK BISA</b> mengajar pada kelas tertentu.</p>
+          <h3>Atur Ketersediaan Waktu Mengajar</h3>
+          <p class="text-subtitle text-muted">
+            <b>Centang</b> kotak pada jam di mana guru tersebut <b>BISA HADIR</b>.<br>
+            <span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Kotak yang dibiarkan kosong akan dianggap sebagai waktu berhalangan.</span>
+          </p>
         </div>
         <div class="col-12 col-md-4 order-md-2 order-first text-md-end mb-3">
-          <a href="{{ route('admin.guruFree.rekap') }}" class="btn btn-primary">
-            <i class="fas fa-chart-line"></i> Lihat Rekap
+          <a href="{{ route('admin.guruFree.rekap') }}" class="btn btn-secondary shadow-sm">
+            <i class="fas fa-chart-line"></i> Lihat Rekap Berhalangan
           </a>
         </div>
       </div>
@@ -36,7 +39,7 @@
                 @foreach ($guruMapels as $gm)
                   @php $targetVal = $gm->guru_id . '_' . $gm->kelas_id; @endphp
                   <option value="{{ $targetVal }}" {{ $selectedTarget == $targetVal ? 'selected' : '' }}>
-                    {{ $gm->guru->nama_guru ?? 'Guru Hapus' }} | {{ $gm->kelas->nama_kelas ?? 'Kelas Hapus' }}
+                    {{ $gm->guru->nama_guru ?? 'Guru Hapus' }} | {{ $gm->kelas->nama_kelas ?? 'Kelas Hapus' }} | {{ $gm->mapel->nama_mapel ?? 'Mapel Hapus' }}
                   </option>
                 @endforeach
               </select>
@@ -51,16 +54,33 @@
             <div class="card-body">
               <form action="{{ route('admin.guruFree.store') }}" method="POST">
                 @csrf
-                {{-- Input hidden yang menyimpan kombinasi guru dan kelas --}}
                 <input type="hidden" name="target" value="{{ $selectedTarget }}">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                  <h5 class="mb-0 text-success"><i class="fas fa-check-square me-2"></i> Jadwal Bisa Hadir</h5>
+                  <div>
+                    <button type="button" class="btn btn-sm btn-outline-success me-2" onclick="checkAll(true)">
+                      <i class="fas fa-check-double"></i> Centang Semua
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="checkAll(false)">
+                      <i class="fas fa-eraser"></i> Kosongkan Semua
+                    </button>
+                  </div>
+                </div>
 
                 <div class="table-responsive">
                   <table class="table table-bordered text-center align-middle">
                     <thead class="table-light">
                       <tr>
-                        <th>Jam Ke / Waktu</th>
+                        <th class="align-middle">Jam Ke / Waktu</th>
                         @foreach ($hari as $day)
-                          <th>{{ $day }}</th>
+                          <th class="align-middle text-center">
+                            {{ $day }}<br>
+                            {{-- Checkbox Master Per Hari --}}
+                            <div class="form-check form-check-sm d-flex justify-content-center mt-2 mb-0" title="Centang semua jam di hari {{ $day }}">
+                              <input class="form-check-input check-all-day border-secondary" type="checkbox" data-day="{{ $day }}" style="cursor: pointer; transform: scale(1.2);">
+                            </div>
+                          </th>
                         @endforeach
                       </tr>
                     </thead>
@@ -80,10 +100,21 @@
                               @if ($slot->is_istirahat)
                                 <span class="text-muted font-italic">-</span>
                               @else
-                                @php $key = "{$day}_{$slot->id}"; @endphp
+                                @php
+                                  $key = "{$day}_{$slot->id}";
+                                  $isChecked = false;
+
+                                  if ($isInitialized) {
+                                      $isChecked = isset($tersedia[$key]);
+                                  } else {
+                                      $isChecked = false;
+                                  }
+                                @endphp
+
                                 <div class="form-check form-check-sm d-flex justify-content-center">
-                                  <input class="form-check-input form-check-danger border-danger border-2" type="checkbox" style="transform: scale(1.5); cursor: pointer;"
-                                    name="unassigned[{{ $key }}]" value="1" {{ isset($tidakTersedia[$key]) ? 'checked' : '' }}>
+                                  {{-- Tambahkan class 'day-NamaHari' agar mudah dijangkau oleh JavaScript --}}
+                                  <input class="form-check-input check-jadwal day-{{ $day }} border-success border-2" type="checkbox" style="transform: scale(1.5); cursor: pointer;"
+                                    name="available[{{ $key }}]" value="1" {{ $isChecked ? 'checked' : '' }}>
                                 </div>
                               @endif
                             </td>
@@ -95,8 +126,8 @@
                 </div>
 
                 <div class="d-flex justify-content-end mt-4">
-                  <button type="submit" class="btn btn-danger icon icon-left fw-bold shadow-sm">
-                    <i class="fas fa-save"></i> Simpan Batasan Waktu
+                  <button type="submit" class="btn btn-success icon icon-left fw-bold shadow-sm px-4">
+                    <i class="fas fa-save"></i> Simpan Ketersediaan
                   </button>
                 </div>
               </form>
@@ -106,4 +137,40 @@
       @endif
     </section>
   </div>
+@endsection
+
+@section('script')
+  <script>
+    // 1. Fungsi untuk mencentang/mengosongkan seluruh tabel
+    function checkAll(state) {
+      let checkboxes = document.querySelectorAll('.check-jadwal');
+      checkboxes.forEach(function(checkbox) {
+        checkbox.checked = state;
+      });
+
+      // Sinkronisasi juga ke checkbox header harian
+      let dayCheckboxes = document.querySelectorAll('.check-all-day');
+      dayCheckboxes.forEach(function(cb) {
+        cb.checked = state;
+      });
+    }
+
+    // 2. Fungsi untuk mencentang/mengosongkan berdasarkan Hari
+    document.addEventListener('DOMContentLoaded', function() {
+      let masterDayCheckboxes = document.querySelectorAll('.check-all-day');
+
+      masterDayCheckboxes.forEach(function(master) {
+        master.addEventListener('change', function() {
+          let day = this.getAttribute('data-day');
+          let isChecked = this.checked;
+
+          // Cari semua checkbox yang memiliki class sesuai nama hari tersebut
+          let targetCheckboxes = document.querySelectorAll('.day-' + day);
+          targetCheckboxes.forEach(function(cb) {
+            cb.checked = isChecked;
+          });
+        });
+      });
+    });
+  </script>
 @endsection
