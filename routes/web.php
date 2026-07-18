@@ -70,6 +70,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/{id}/activate', [GeneticScheduleController::class, 'activate'])->name('activate');
             Route::delete('{id}', [GeneticScheduleController::class, 'destroy'])->name('destroy');
             Route::put('/update-manual/{id}', [GeneticScheduleController::class, 'updateManual'])->name('updateManual');
+            Route::post('/bulk-move-jadwal', [GeneticScheduleController::class, 'bulkMoveJadwal'])->name('bulkMoveJadwal');
         });
 
         // Cetak Jadwal

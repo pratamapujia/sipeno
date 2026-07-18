@@ -32,7 +32,7 @@
       </div>
     </div>
 
-    <section class="section">
+    <section class="section position-relative">
       <div class="card mb-4 shadow-sm">
         <div class="card-body py-3">
           <div class="row align-items-center">
@@ -75,7 +75,6 @@
             ],
         ];
 
-        // Daftar Waktu Pagi Khusus Senin
         $waktuSeninPagi = [
             1 => '07:30 - 08:00',
             2 => '08:00 - 08:30',
@@ -88,26 +87,8 @@
             9 => '12:50 - 13:25',
             10 => '13:25 - 14:00',
         ];
-
-        // Daftar Waktu Pagi Khusus Jumat (Dimulai jam 07:30)
-        $waktuJumatPagi = [
-            1 => '07:30 - 08:00',
-            2 => '08:00 - 08:30',
-            3 => '08:30 - 09:00',
-            4 => '09:30 - 10:00',
-            5 => '10:00 - 10:30',
-            6 => '10:30 - 11:00',
-        ];
-
-        // Daftar Waktu Siang Khusus Jumat (Dimulai jam 13:00)
-        $waktuJumatSiang = [
-            11 => '13:00 - 13:30',
-            12 => '13:30 - 14:00',
-            13 => '14:00 - 14:30',
-            14 => '15:00 - 15:30',
-            15 => '15:30 - 16:00',
-            16 => '16:00 - 16:30',
-        ];
+        $waktuJumatPagi = [1 => '07:30 - 08:00', 2 => '08:00 - 08:30', 3 => '08:30 - 09:00', 4 => '09:30 - 10:00', 5 => '10:00 - 10:30', 6 => '10:30 - 11:00'];
+        $waktuJumatSiang = [11 => '13:00 - 13:30', 12 => '13:30 - 14:00', 13 => '14:00 - 14:30', 14 => '15:00 - 15:30', 15 => '15:30 - 16:00', 16 => '16:00 - 16:30'];
       @endphp
 
       @foreach ($shiftGroups as $shiftKey => $shift)
@@ -128,22 +109,14 @@
                     </tr>
                   </thead>
                   <tbody>
-
-                    {{-- TAMBAHAN: BARIS JAM KE-0 (Khusus Shift Pagi) --}}
                     @if ($shiftKey == 'Pagi')
                       <tr class="table-info">
-                        <td>
-                          <b class="text-nowrap text-dark">Jam ke-0</b><br>
-                        </td>
+                        <td><b class="text-nowrap text-dark">Jam ke-0</b></td>
                         @foreach ($days as $day)
                           @if ($day == 'Senin')
-                            <td class="align-middle">
-                              <b class="text-primary" style="letter-spacing: 1px;"><i class="fas fa-flag me-1"></i> UPACARA BENDERA</b>
-                            </td>
+                            <td class="align-middle"><b class="text-primary" style="letter-spacing: 1px;"><i class="fas fa-flag me-1"></i> UPACARA</b></td>
                           @elseif ($day == 'Jumat')
-                            <td class="align-middle">
-                              <b class="text-success" style="letter-spacing: 1px;"><i class="fas fa-praying-hands me-1"></i> ISTIGHOSAH</b>
-                            </td>
+                            <td class="align-middle"><b class="text-success" style="letter-spacing: 1px;"><i class="fas fa-praying-hands me-1"></i> ISTIGHOSAH</b></td>
                           @else
                             <td class="text-muted" style="background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 10px, #e9ecef 10px, #e9ecef 20px);">-</td>
                           @endif
@@ -154,9 +127,7 @@
                     @foreach ($shift['data'] as $slot)
                       <tr>
                         <td>
-                          <b class="text-nowrap text-dark">Jam ke-{{ $slot->slot_number }}</b><br>
-                          {{-- <small class="text-muted text-nowrap">{{ substr($slot->start_time, 0, 5) }} - {{ substr($slot->end_time, 0, 5) }}</small><br>
-                          <small class="text-danger" style="font-size: 10px;">(Senin-Kamis)</small> --}}
+                          <b class="text-nowrap text-dark">Jam ke-{{ $slot->slot_number }}</b>
                         </td>
 
                         @foreach ($days as $day)
@@ -169,57 +140,56 @@
                               @if (isset($jadwalMatrix[$slot->id][$day]))
                                 @php $s = $jadwalMatrix[$slot->id][$day]; @endphp
 
-                                <div class="card mb-0 shadow-sm border">
+                                <div class="card mb-0 shadow-sm border position-relative">
+                                  {{-- CHECKBOX UNTUK BULK EDIT (Hanya tampil jika status bukan active) --}}
+                                  @if ($batch->status != 'active')
+                                    <div class="position-absolute top-0 start-0 p-2">
+                                      <input class="form-check-input select-jadwal border-primary" type="checkbox" value="{{ $s->id }}" data-guru="{{ $s->guru_id }}"
+                                        data-mapel="{{ $s->mapel_id }}" style="cursor: pointer; transform: scale(1.2);">
+                                    </div>
+                                  @endif
+
                                   <div class="card-body p-2 text-center">
-                                    {{-- Lencana Waktu Khusus Senin Pagi --}}
                                     @if ($day == 'Senin' && $slot->slot_number <= 10)
-                                      <span class="badge bg-light-info text-dark border border-info mb-2 d-block">
-                                        <i class="far fa-clock me-1"></i> {{ $waktuSeninPagi[$slot->slot_number] ?? '' }}
-                                      </span>
-                                      {{-- Lencana Waktu Khusus Jumat Pagi --}}
+                                      <span class="badge bg-light-info text-dark border border-info mb-2 d-block"><i class="far fa-clock me-1"></i>
+                                        {{ $waktuSeninPagi[$slot->slot_number] ?? '' }}</span>
                                     @elseif ($day == 'Jumat' && $slot->slot_number <= 6)
-                                      <span class="badge bg-light-info text-dark border border-info mb-2 d-block">
-                                        <i class="far fa-clock me-1"></i> {{ $waktuJumatPagi[$slot->slot_number] ?? '' }}
-                                      </span>
-                                      {{-- Lencana Waktu Khusus Jumat Siang --}}
+                                      <span class="badge bg-light-info text-dark border border-info mb-2 d-block"><i class="far fa-clock me-1"></i>
+                                        {{ $waktuJumatPagi[$slot->slot_number] ?? '' }}</span>
                                     @elseif ($day == 'Jumat' && $slot->slot_number >= 11)
-                                      <span class="badge bg-light-info text-dark border border-info mb-2 d-block">
-                                        <i class="far fa-clock me-1"></i> {{ $waktuJumatSiang[$slot->slot_number] ?? '' }}
-                                      </span>
+                                      <span class="badge bg-light-info text-dark border border-info mb-2 d-block"><i class="far fa-clock me-1"></i>
+                                        {{ $waktuJumatSiang[$slot->slot_number] ?? '' }}</span>
                                     @else
-                                      <span class="badge bg-light-info text-dark border border-info mb-2 d-block">
-                                        <i class="far fa-clock me-1"></i> {{ substr($slot->start_time, 0, 5) . ' - ' . substr($slot->end_time, 0, 5) }}
-                                      </span>
+                                      <span class="badge bg-light-info text-dark border border-info mb-2 d-block"><i class="far fa-clock me-1"></i>
+                                        {{ substr($slot->start_time, 0, 5) . ' - ' . substr($slot->end_time, 0, 5) }}</span>
                                     @endif
-                                    <span class="fw-bold d-block text-primary">{{ $s->mapel->nama_mapel }}</span>
+
+                                    <span class="fw-bold d-block text-primary" style="margin-right: 15px;">{{ $s->mapel->nama_mapel }}</span>
                                     <small class="text-dark d-block">{{ ucwords(strtolower($s->guru->nama_guru)) }}</small>
 
                                     @if ($batch->status != 'active')
                                       <button class="btn btn-sm btn-light-secondary mt-2 w-100" data-bs-toggle="modal" data-bs-target="#editModal{{ $s->id }}">
-                                        <i class="fas fa-edit"></i> Pindah
+                                        <i class="fas fa-arrows-alt"></i> Pindah
                                       </button>
                                     @endif
                                   </div>
                                 </div>
 
+                                {{-- MODAL PINDAH MANUAL (TETAP ADA) --}}
                                 @if ($batch->status != 'active')
                                   <div class="modal fade text-left" id="editModal{{ $s->id }}" tabindex="-1" role="dialog" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered" role="document">
                                       <div class="modal-content">
                                         <div class="modal-header bg-primary">
                                           <h5 class="modal-title white">Pindah Jadwal Manual</h5>
-                                          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
-                                            <i data-feather="x"></i>
-                                          </button>
+                                          <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><i data-feather="x"></i></button>
                                         </div>
                                         <form action="{{ route('admin.jadwal.updateManual', $s->id) }}" method="POST">
                                           @csrf
                                           @method('PUT')
                                           <div class="modal-body text-start">
-                                            <div class="alert alert-info">
-                                              Memindahkan <b>{{ $s->mapel->nama_mapel }}</b> ({{ $s->guru->nama_guru }}) dari <b>{{ $s->day }} Jam ke-{{ $s->slotJam->slot_number }}</b>.
-                                            </div>
-
+                                            <div class="alert alert-info">Memindahkan <b>{{ $s->mapel->nama_mapel }}</b> ({{ $s->guru->nama_guru }}) dari <b>{{ $s->day }} Jam
+                                                ke-{{ $s->slotJam->slot_number }}</b>.</div>
                                             <div class="form-group">
                                               <label class="fw-bold">Pindah ke Hari:</label>
                                               <select name="day" class="form-select" required>
@@ -228,13 +198,12 @@
                                                 @endforeach
                                               </select>
                                             </div>
-
                                             <div class="form-group mt-3">
                                               <label class="fw-bold">Pindah ke Jam Ke-:</label>
                                               <select name="time_slot_id" class="form-select" required>
                                                 @foreach ($slots as $slotItem)
-                                                  <option value="{{ $slotItem->id }}" {{ $s->time_slot_id == $slotItem->id ? 'selected' : '' }}>
-                                                    Jam ke-{{ $slotItem->slot_number }} ({{ substr($slotItem->start_time, 0, 5) }} - {{ substr($slotItem->end_time, 0, 5) }})
+                                                  <option value="{{ $slotItem->id }}" {{ $s->time_slot_id == $slotItem->id ? 'selected' : '' }}>Jam ke-{{ $slotItem->slot_number }}
+                                                    ({{ substr($slotItem->start_time, 0, 5) }} - {{ substr($slotItem->end_time, 0, 5) }})
                                                   </option>
                                                 @endforeach
                                               </select>
@@ -257,7 +226,7 @@
                         @endforeach
                       </tr>
 
-                      {{-- SISIPAN: ISTIRAHAT JUMAT (Setelah Jam ke-3) --}}
+                      {{-- AREA SISIPAN ISTIRAHAT --}}
                       @if ($slot->slot_number == 3)
                         <tr class="table-warning">
                           <td class="align-middle"><b class="text-dark"><i class="fas fa-coffee me-1"></i> ISTIRAHAT</b></td>
@@ -270,8 +239,6 @@
                           @endforeach
                         </tr>
                       @endif
-
-                      {{-- SISIPAN: ISTIRAHAT 1 SENIN-KAMIS (Setelah Jam ke-4) --}}
                       @if ($slot->slot_number == 4)
                         <tr class="table-warning">
                           <td class="align-middle"><b class="text-dark"><i class="fas fa-coffee me-1"></i> ISTIRAHAT</b></td>
@@ -284,8 +251,6 @@
                           @endforeach
                         </tr>
                       @endif
-
-                      {{-- SISIPAN: ISTIRAHAT 2 SENIN-KAMIS (Setelah Jam ke-7) --}}
                       @if ($slot->slot_number == 7)
                         <tr class="table-warning">
                           <td class="align-middle"><b class="text-dark"><i class="fas fa-utensils me-1"></i> ISTIRAHAT</b></td>
@@ -298,8 +263,6 @@
                           @endforeach
                         </tr>
                       @endif
-
-                      {{-- SISIPAN: ISTIRAHAT JUMAT SIANG (Setelah Jam ke-13) --}}
                       @if ($slot->slot_number == 13)
                         <tr class="table-warning">
                           <td class="align-middle"><b class="text-dark"><i class="fas fa-coffee me-1"></i> ISTIRAHAT</b></td>
@@ -312,8 +275,6 @@
                           @endforeach
                         </tr>
                       @endif
-
-                      {{-- SISIPAN: ISTIRAHAT SIANG SENIN-KAMIS (Setelah Jam ke-14) --}}
                       @if ($slot->slot_number == 14)
                         <tr class="table-warning">
                           <td class="align-middle"><b class="text-dark"><i class="fas fa-coffee me-1"></i> ISTIRAHAT</b></td>
@@ -335,6 +296,59 @@
         @endif
       @endforeach
 
+      {{-- TOMBOL FLOATING (MUNCUL JIKA ADA CHECKBOX TERCENTANG) --}}
+      <div id="bulk-edit-container" class="d-none position-fixed bottom-0 start-50 translate-middle-x mb-4 shadow-lg" style="z-index: 1050;">
+        <button class="btn btn-warning fw-bold px-4 py-2 rounded-pill shadow-lg border border-dark" data-bs-toggle="modal" data-bs-target="#bulkMoveModal">
+          <i class="fas fa-arrows-alt me-1"></i> Pindah Jadwal Terpilih (<span id="selected-count">0</span> JP)
+        </button>
+      </div>
+
+      {{-- MODAL BULK MOVE (PINDAH MASSAL) --}}
+      <div class="modal fade text-left" id="bulkMoveModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header bg-warning">
+              <h5 class="modal-title text-dark"><i class="fas fa-arrows-alt me-2"></i> Pindah Jadwal Massal</h5>
+              <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><i data-feather="x"></i></button>
+            </div>
+            <form action="{{ route('admin.jadwal.bulkMoveJadwal') }}" method="POST">
+              @csrf
+              <div class="modal-body text-start">
+                <input type="hidden" name="jadwal_ids" id="bulk-jadwal-ids">
+                <div class="alert alert-light-warning text-dark border-warning">
+                  Anda akan memindahkan <b><span id="modal-count-text">0</span> JP</b> secara berurutan.
+                </div>
+
+                <div class="form-group">
+                  <label class="fw-bold">Pindah ke Hari:</label>
+                  <select name="day" class="form-select" required>
+                    @foreach ($days as $d)
+                      <option value="{{ $d }}">{{ $d }}</option>
+                    @endforeach
+                  </select>
+                </div>
+
+                <div class="form-group mt-3">
+                  <label class="fw-bold">Pindah Mulai Jam Ke-:</label>
+                  <select name="start_time_slot_id" class="form-select" required>
+                    @foreach ($slots as $slotItem)
+                      <option value="{{ $slotItem->id }}">
+                        Jam ke-{{ $slotItem->slot_number }} ({{ substr($slotItem->start_time, 0, 5) }} - {{ substr($slotItem->end_time, 0, 5) }})
+                      </option>
+                    @endforeach
+                  </select>
+                  <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle"></i> Sistem akan otomatis mengurutkan ke bawah. (Contoh: jika memindah 3 JP dan memilih mulai jam ke-4, otomatis
+                    akan mengisi jam 4, 5, dan 6).</small>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-warning ml-1 fw-bold text-dark">Simpan Perubahan</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
     </section>
   </div>
 @endsection
@@ -343,6 +357,7 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
+      // --- NOTIFIKASI SWEETALERT ---
       const flashBerhasil = document.querySelector('.flash-data').getAttribute('data-berhasil');
       const flashGagal = document.querySelectorAll('.flash-data')[1].getAttribute('data-gagal');
 
@@ -354,7 +369,6 @@
           confirmButtonColor: '#435ebe'
         });
       }
-
       if (flashGagal) {
         Swal.fire({
           icon: 'error',
@@ -363,6 +377,64 @@
           confirmButtonColor: '#dc3545'
         });
       }
+
+      // --- LOGIKA CHECKBOX BULK EDIT ---
+      let firstGuru = null;
+      let firstMapel = null;
+      const checkboxes = document.querySelectorAll('.select-jadwal');
+      const bulkContainer = document.getElementById('bulk-edit-container');
+      const countDisplay = document.getElementById('selected-count');
+      const modalCountText = document.getElementById('modal-count-text');
+      const hiddenInputIds = document.getElementById('bulk-jadwal-ids');
+
+      checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          const checkedBoxes = document.querySelectorAll('.select-jadwal:checked');
+          const count = checkedBoxes.length;
+
+          if (count === 0) {
+            // Jika tidak ada yang dicentang, buka kunci semua checkbox
+            firstGuru = null;
+            firstMapel = null;
+            checkboxes.forEach(cb => {
+              cb.disabled = false;
+              cb.parentElement.parentElement.classList.remove('border-warning', 'bg-light-warning');
+            });
+            bulkContainer.classList.add('d-none');
+          } else {
+            // Jika ada yang dicentang, rekam data dari centang pertama
+            if (count === 1) {
+              firstGuru = checkedBoxes[0].getAttribute('data-guru');
+              firstMapel = checkedBoxes[0].getAttribute('data-mapel');
+            }
+
+            // Validasi: Kunci checkbox yang beda guru atau beda mapel
+            checkboxes.forEach(cb => {
+              const isMatch = cb.getAttribute('data-guru') === firstGuru && cb.getAttribute('data-mapel') === firstMapel;
+
+              if (!isMatch) {
+                cb.disabled = true;
+              } else {
+                cb.disabled = false;
+                // Kosmetik: Tambah warna jika dicentang
+                if (cb.checked) {
+                  cb.parentElement.parentElement.classList.add('border-warning', 'bg-light-warning');
+                } else {
+                  cb.parentElement.parentElement.classList.remove('border-warning', 'bg-light-warning');
+                }
+              }
+            });
+
+            // Tampilkan tombol dan perbarui data ID
+            countDisplay.innerText = count;
+            modalCountText.innerText = count;
+            bulkContainer.classList.remove('d-none');
+
+            const ids = Array.from(checkedBoxes).map(cb => cb.value);
+            hiddenInputIds.value = ids.join(',');
+          }
+        });
+      });
     });
   </script>
 @endsection

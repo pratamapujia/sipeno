@@ -262,4 +262,134 @@ class GeneticScheduleController extends Controller
 
         return redirect()->back()->with('success', 'Jadwal berhasil dipindahkan secara manual.');
     }
+
+    public function bulkMoveJadwal(Request $request)
+    {
+        $request->validate([
+            'jadwal_ids' => 'required|string',
+            'day' => 'required',
+            'start_time_slot_id' => 'required',
+        ]);
+
+        $jadwalIds = explode(',', $request->jadwal_ids);
+        $count = count($jadwalIds);
+
+        // Ambil jadwal yang mau dipindah (diurutkan berdasarkan jam sebelumnya agar pemindahannya berurutan)
+        $schedules = Jadwal::with('mapel', 'slotJam')
+            ->join('time_slots', 'schedules.time_slot_id', '=', 'time_slots.id')
+            ->whereIn('schedules.id', $jadwalIds)
+            ->orderBy('time_slots.slot_number', 'asc')
+            ->select('schedules.*')
+            ->get();
+
+        if ($schedules->isEmpty()) {
+            return redirect()->back()->with('error', 'Tidak ada jadwal yang dipilih.');
+        }
+
+        $guruId = $schedules->first()->guru_id;
+        $kelasId = $schedules->first()->kelas_id;
+        $academicYearId = $schedules->first()->academic_year_id;
+        $batchId = $schedules->first()->schedule_batch_id;
+        $tipeMapel = $schedules->first()->mapel->type ?? 'teori';
+
+        // Ambil slot mulai
+        $startSlot = SlotJam::findOrFail($request->start_time_slot_id);
+
+        // Ambil rentang slot tujuan (sejumlah $count yang dicentang)
+        $targetSlots = SlotJam::where('is_istirahat', false)
+            ->where('slot_number', '>=', $startSlot->slot_number)
+            ->orderBy('slot_number', 'asc')
+            ->take($count)
+            ->get();
+
+        // Cek jika durasi melampaui batas slot 17
+        if ($targetSlots->count() < $count) {
+            return redirect()->back()->with('error', 'Slot jam tidak mencukupi untuk memindahkan ' . $count . ' JP ke waktu tersebut (melewati batas jam pulang).');
+        }
+
+        $targetSlotIds = $targetSlots->pluck('id')->toArray();
+        $targetSlotNumbers = $targetSlots->pluck('slot_number')->toArray();
+
+        // VALIDASI 1: Cek Piket
+        $sedangPiket = GuruPiket::where('tahun_ajaran_id', $academicYearId)
+            ->where('guru_id', $guruId)
+            ->where('hari', $request->day)
+            ->exists();
+
+        if ($sedangPiket) {
+            return redirect()->back()->with('error', 'Gagal memindah! Guru tersebut berstatus PIKET pada hari ' . $request->day . '.');
+        }
+
+        // VALIDASI 2: Cek Bentrok Guru
+        $cekGuruBentrok = Jadwal::where('schedule_batch_id', $batchId)
+            ->where('day', $request->day)
+            ->whereIn('time_slot_id', $targetSlotIds)
+            ->where('guru_id', $guruId)
+            ->whereNotIn('id', $jadwalIds) // abaikan jadwal yang sedang dipindah
+            ->exists();
+
+        if ($cekGuruBentrok) {
+            return redirect()->back()->with('error', 'Gagal memindah! Guru tersebut sudah memiliki jadwal mengajar di kelas lain pada rentang jam tujuan.');
+        }
+
+        // VALIDASI 3: Cek Bentrok Kelas
+        $cekKelasBentrok = Jadwal::where('schedule_batch_id', $batchId)
+            ->where('day', $request->day)
+            ->whereIn('time_slot_id', $targetSlotIds)
+            ->where('kelas_id', $kelasId)
+            ->whereNotIn('id', $jadwalIds)
+            ->exists();
+
+        if ($cekKelasBentrok) {
+            return redirect()->back()->with('error', 'Gagal memindah! Sudah ada mata pelajaran lain di kelas tersebut pada rentang jam tujuan.');
+        }
+
+        // VALIDASI 4: Shift & Zona Jumat
+        foreach ($targetSlotNumbers as $slotNumber) {
+            if ($request->day === 'Jumat' && (($slotNumber >= 7 && $slotNumber <= 10) || $slotNumber == 17)) {
+                return redirect()->back()->with('error', 'Gagal memindah! Rentang yang Anda pilih bertabrakan dengan Zona Kosong di hari Jumat.');
+            }
+            if ($tipeMapel === 'teori' && $slotNumber > 10) {
+                return redirect()->back()->with('error', 'Gagal memindah! Mapel Teori wajib ditaruh di Shift Pagi (Maksimal Jam ke-10).');
+            }
+        }
+
+        // VALIDASI 5: Karantina Eksklusif Shift Harian
+        $jadwalHariTujuan = Jadwal::where('schedule_batch_id', $batchId)
+            ->where('day', $request->day)
+            ->where('kelas_id', $kelasId)
+            ->whereNotIn('schedules.id', $jadwalIds)
+            ->join('time_slots', 'schedules.time_slot_id', '=', 'time_slots.id')
+            ->select('time_slots.slot_number')
+            ->get();
+
+        $adaPagi = false;
+        $adaSiang = false;
+
+        // Cek shift pada tujuan
+        foreach ($targetSlotNumbers as $slotNum) {
+            if ($slotNum <= 10) $adaPagi = true;
+            if ($slotNum >= 11) $adaSiang = true;
+        }
+
+        // Cek shift pada jadwal eksisting hari itu
+        foreach ($jadwalHariTujuan as $jht) {
+            if ($jht->slot_number <= 10) $adaPagi = true;
+            if ($jht->slot_number >= 11) $adaSiang = true;
+        }
+
+        if ($adaPagi && $adaSiang) {
+            return redirect()->back()->with('error', 'Gagal memindah! Jika dipindah ke sini, Kelas akan masuk Pagi dan Siang sekaligus pada hari ' . $request->day . '.');
+        }
+
+        // JIKA SEMUA VALIDASI LOLOS, Lakukan Update Secara Berurutan
+        foreach ($schedules as $index => $jadwal) {
+            $jadwal->update([
+                'day' => $request->day,
+                'time_slot_id' => $targetSlotIds[$index]
+            ]);
+        }
+
+        return redirect()->back()->with('success', $count . ' Jam Pelajaran berhasil dipindahkan secara berurutan.');
+    }
 }

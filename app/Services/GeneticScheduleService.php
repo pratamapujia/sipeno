@@ -219,7 +219,8 @@ class GeneticScheduleService
 
         if (isset($availabilities[$g['guru_id']])) {
           foreach ($availabilities[$g['guru_id']] as $av) {
-            if ($av['day'] === $g['day'] && $av['time_slot_id'] === $g['time_slot_id']) {
+            // PERUBAHAN: Cek hari, slot jam, DAN kelas yang spesifik
+            if ($av['day'] === $g['day'] && $av['time_slot_id'] === $g['time_slot_id'] && $av['kelas_id'] == $g['kelas_id']) {
               $penalty -= 15;
             }
           }
@@ -367,8 +368,8 @@ class GeneticScheduleService
 
       if (isset($availabilities[$g['guru_id']])) {
         foreach ($availabilities[$g['guru_id']] as $av) {
-          if ($av['day'] === $hari && $av['time_slot_id'] === $g['time_slot_id']) {
-            $pesan[] = "Guru <b>{$namaGuru}</b> diplot pada waktu berhalangannya di <b>{$hari} Jam ke-{$jamKe}</b>.";
+          if ($av['day'] === $hari && $av['time_slot_id'] === $g['time_slot_id'] && $av['kelas_id'] == $g['kelas_id']) {
+            $pesan[] = "Guru <b>{$namaGuru}</b> diplot pada waktu berhalangannya di <b>Kelas {$namaKelas}</b> pada <b>{$hari} Jam ke-{$jamKe}</b>.";
           }
         }
       }
