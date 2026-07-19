@@ -2,6 +2,7 @@
 
 @section('title')
   <title>Ketersediaan Waktu Guru</title>
+  <link rel="stylesheet" href="{{ asset('assets/extensions/choices.js/public/assets/styles/choices.css') }}">
 @endsection
 
 @section('main')
@@ -31,7 +32,7 @@
           <form action="{{ route('admin.guruFree.index') }}" method="GET" id="form-pilih-guru">
             <div class="form-group">
               <label for="target" class="form-label font-bold text-primary"><i class="fas fa-filter me-1"></i> Pilih Guru & Kelas:</label>
-              <select name="target" id="target" class="form-select shadow-sm" style="border: 1px solid #435ebe;" onchange="document.getElementById('form-pilih-guru').submit();">
+              <select name="target" id="target" class="choices form-select shadow-sm" style="border: 1px solid #435ebe;" onchange="document.getElementById('form-pilih-guru').submit();">
                 @if ($guruMapels->isEmpty())
                   <option value="" disabled selected>-- Belum ada data Plotting Mapel --</option>
                 @endif
@@ -132,6 +133,8 @@
 @endsection
 
 @section('script')
+  <script src="{{ asset('assets/extensions/choices.js/public/assets/scripts/choices.js') }}"></script>
+  <script src="{{ asset('assets/static/js/pages/form-element-select.js') }}"></script>
   <script>
     // 1. Fungsi untuk mencentang/mengosongkan seluruh tabel
     function checkAll(state) {
