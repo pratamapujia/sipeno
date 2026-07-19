@@ -143,65 +143,24 @@
     // Script untuk konfirmasi Generate Jadwal
     document.getElementById('btn-generate').addEventListener('click', function() {
       const form = document.getElementById('form-generate');
-      let abortController;
 
       Swal.fire({
         title: "Mulai Generate Jadwal?",
-        text: "Proses Algoritma Genetika memakan waktu beberapa saat. Anda dapat membatalkannya jika proses memakan waktu terlalu lama.",
+        text: "Proses Algoritma Genetika ini memakan waktu beberapa detik hingga menit tergantung dari banyaknya data. Harap tunggu dan jangan tutup halaman.",
         icon: "info",
         showCancelButton: true,
         confirmButtonColor: "#435ebe",
         cancelButtonColor: "#dc3545",
         confirmButtonText: "Ya, Generate Sekarang",
-        cancelButtonText: "Batal Proses",
+        cancelButtonText: "Batal",
         showLoaderOnConfirm: true,
-        allowOutsideClick: false, // Kunci layar luar agar fokus ke tombol Batal
+        allowOutsideClick: () => !Swal.isLoading(),
         preConfirm: () => {
-          // Buat controller untuk mencegat dan mematikan request HTTP
-          abortController = new AbortController();
-          const signal = abortController.signal;
-
-          // Secara bawaan SweetAlert menonaktifkan tombol batal saat loading.
-          // Kita paksa tombol Batal agar tetap aktif dan bisa diklik.
-          const cancelButton = Swal.getCancelButton();
-          cancelButton.removeAttribute('disabled');
-          cancelButton.style.display = 'inline-block';
-
-          // Ubah teks tombol konfirmasi
-          Swal.getConfirmButton().textContent = 'Sedang Merakit...';
-
-          // Kirim data secara asinkronus (di latar belakang)
-          return fetch(form.action, {
-              method: 'POST',
-              body: new FormData(form),
-              signal: signal,
-              headers: {
-                'X-Requested-With': 'XMLHttpRequest'
-              }
-            })
-            .then(response => {
-              // Karena Controller Anda melakukan fungsi redirect(), kita ikuti URL barunya
-              if (response.redirected) {
-                window.location.href = response.url;
-              } else {
-                window.location.reload();
-              }
-            })
-            .catch(error => {
-              // Tangkap jika terjadi pembatalan
-              if (error.name === 'AbortError') {
-                Swal.showValidationMessage('<i class="fas fa-ban me-1"></i> Pembuatan jadwal berhasil dibatalkan.');
-              } else {
-                Swal.showValidationMessage(`Gagal: Terjadi kesalahan server.`);
-              }
-            });
-        }
-      }).then((result) => {
-        // Jika user menekan tombol Batal saat loading
-        if (result.dismiss === Swal.DismissReason.cancel) {
-          if (abortController) {
-            abortController.abort(); // Kirim sinyal putus ke peramban
-          }
+          // Mengubah teks tombol saat proses berjalan agar user tahu sistem tidak hang
+          Swal.getConfirmButton().textContent = 'Sedang Memproses...';
+          return new Promise((resolve) => {
+            form.submit();
+          });
         }
       });
     });

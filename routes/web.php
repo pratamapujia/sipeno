@@ -71,6 +71,10 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('{id}', [GeneticScheduleController::class, 'destroy'])->name('destroy');
             Route::put('/update-manual/{id}', [GeneticScheduleController::class, 'updateManual'])->name('updateManual');
             Route::post('/bulk-move-jadwal', [GeneticScheduleController::class, 'bulkMoveJadwal'])->name('bulkMoveJadwal');
+            Route::post('/move-to-clipboard', [GeneticScheduleController::class, 'moveToClipboard'])->name('moveToClipboard');
+            Route::post('/move-to-clipboard-bulk', [GeneticScheduleController::class, 'moveToClipboardBulk'])->name('moveToClipboardBulk');
+            Route::post('/restore-from-clipboard', [GeneticScheduleController::class, 'restoreFromClipboard'])->name('restoreFromClipboard');
+            Route::post('/restoreFromClipboardBulk', [App\Http\Controllers\GeneticScheduleController::class, 'restoreFromClipboardBulk'])->name('restoreFromClipboardBulk');
         });
 
         // Cetak Jadwal

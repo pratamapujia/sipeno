@@ -31,6 +31,13 @@ class GeneticScheduleService
       return $slot->slot_number <= 6 || ($slot->slot_number >= 11 && $slot->slot_number <= 16);
     })->pluck('id')->toArray();
 
+    $shiftData = [
+      'normal_pagi'  => array_slice($slotsNormal, 0, 10),
+      'normal_siang' => array_slice($slotsNormal, 10, 8),
+      'jumat_pagi'   => array_slice($slotsJumat, 0, 6),
+      'jumat_siang'  => array_slice($slotsJumat, 6, 6)
+    ];
+
     $guruMapel = GuruMapel::with('mapel')->where('tahun_ajaran_id', $academicYearId)->get()->toArray();
     if (empty($guruMapel)) {
       throw new \Exception('Data plotting (target mengajar) tidak ditemukan atau kosong.');
@@ -79,6 +86,18 @@ class GeneticScheduleService
         return $items->pluck('hari')->toArray();
       })->toArray();
 
+    // --- OPTIMALISASI 1: Tarik database SEKALI SAJA di awal, jangan di dalam loop fitness ---
+    $mapelTypes = Mapel::pluck('type', 'id')->toArray();
+    $slotDetails = SlotJam::select('id', 'slot_number', 'is_istirahat')->get()->keyBy('id')->toArray();
+
+    // --- OPTIMALISASI 2: Ubah array ketersediaan menjadi indeks O(1) agar tidak perlu di-loop ribuan kali ---
+    $availLookup = [];
+    foreach ($availabilities as $gId => $avList) {
+      foreach ($avList as $av) {
+        $availLookup[$gId][$av['day']][$av['time_slot_id']][$av['kelas_id']] = true;
+      }
+    }
+
     $populasi = [];
     for ($i = 0; $i < $this->popSize; $i++) {
       $populasi[] = $this->generateKromosomAcak($targetGroups, $slotsNormal, $slotsJumat, $guruPiket);
@@ -88,7 +107,8 @@ class GeneticScheduleService
     $solusiTerbaik = null;
 
     while ($generasi < $this->maxGenerations) {
-      $populasi = $this->hitungPopulasiFitness($populasi, $availabilities, $guruPiket);
+      // Perbarui pemanggilan fungsi fitness dengan parameter yang sudah dioptimalkan
+      $populasi = $this->hitungPopulasiFitness($populasi, $availLookup, $guruPiket, $mapelTypes, $slotDetails);
 
       usort($populasi, function ($a, $b) {
         return $b['fitness'] <=> $a['fitness'];
@@ -137,7 +157,9 @@ class GeneticScheduleService
         ]);
       }
 
-      Jadwal::insert($dataInsert);
+      foreach (array_chunk($dataInsert, 500) as $chunk) {
+        Jadwal::insert($chunk);
+      }
       return $batch;
     });
 
@@ -216,48 +238,45 @@ class GeneticScheduleService
     return ['jadwal' => $jadwal, 'fitness' => -9999];
   }
 
-  private function hitungPopulasiFitness($populasi, $availabilities, $guruPiket)
+  private function hitungPopulasiFitness($populasi, $availLookup, $guruPiket, $mapelTypes, $slotDetails)
   {
-    $mapelTypes = Mapel::pluck('type', 'id')->toArray();
-    $slotDetails = SlotJam::select('id', 'slot_number', 'is_istirahat')->get()->keyBy('id')->toArray();
-    $activeSlots = SlotJam::where('is_istirahat', false)->orderBy('slot_number')->pluck('slot_number')->toArray();
-
     foreach ($populasi as &$individu) {
       $penalty = 0;
+
+      // Menggunakan array multi-dimensi jauh lebih cepat daripada string (teks)
       $checkGuru = [];
       $checkKelas = [];
-      $kelasJadwalHari = [];
 
-      // OPTIMASI: Loop sekali saja untuk semua aturan dasar
       foreach ($individu['jadwal'] as $g) {
-        // Cek Bentrok Guru & Kelas (Menggunakan akses array lebih cepat daripada query DB)
-        $keyGuru = "{$g['day']}_{$g['time_slot_id']}_{$g['guru_id']}";
-        if (isset($checkGuru[$keyGuru])) {
+        $hari = $g['day'];
+        $slot = $g['time_slot_id'];
+        $guru = $g['guru_id'];
+        $kelas = $g['kelas_id'];
+
+        // --- OPTIMALISASI 3: Pengecekan O(1) Access ---
+
+        // 1. Cek Bentrok Guru
+        if (isset($checkGuru[$hari][$slot][$guru])) {
           $penalty -= 1000;
         }
-        $checkGuru[$keyGuru] = true;
+        $checkGuru[$hari][$slot][$guru] = true;
 
-        $keyKelas = "{$g['day']}_{$g['time_slot_id']}_{$g['kelas_id']}";
-        // Pengecualian hanya jika praktikum, gunakan logika sederhana
-        if (isset($checkKelas[$keyKelas])) {
+        // 2. Cek Bentrok Kelas
+        if (isset($checkKelas[$hari][$slot][$kelas])) {
           $penalty -= 1000;
         }
-        $checkKelas[$keyKelas] = true;
+        $checkKelas[$hari][$slot][$kelas] = true;
 
-        // Cek Ketersediaan Guru (Availabilities)
-        if (isset($availabilities[$g['guru_id']])) {
-          foreach ($availabilities[$g['guru_id']] as $av) {
-            if ($av['day'] === $g['day'] && $av['time_slot_id'] === $g['time_slot_id'] && $av['kelas_id'] == $g['kelas_id']) {
-              $penalty -= 500;
-            }
-          }
+        // 3. Cek Ketersediaan Waktu Luang Guru (Tanpa looping)
+        if (isset($availLookup[$guru][$hari][$slot][$kelas])) {
+          $penalty -= 500;
         }
 
-        $nomorJam = $slotDetails[$g['time_slot_id']]['slot_number'] ?? 1;
+        $nomorJam = $slotDetails[$slot]['slot_number'] ?? 1;
         $tipeMapel = $mapelTypes[$g['mapel_id']] ?? 'teori';
 
-        // Aturan Shift (Ringan)
-        if ($g['day'] === 'Jumat') {
+        // 4. Aturan Shift & Jumat
+        if ($hari === 'Jumat') {
           if (($nomorJam > 6 && $nomorJam <= 10) || $nomorJam > 16) $penalty -= 1000;
         } elseif ($tipeMapel === 'teori' && $nomorJam > 10) {
           $penalty -= 500;

@@ -33,6 +33,57 @@
     </div>
 
     <section class="section position-relative">
+
+      {{-- PANEL CLIPBOARD (RUANG KOSONG) DENGAN CHECKBOX --}}
+      @if (session()->has('jadwal_clipboard') && count(session('jadwal_clipboard')) > 0)
+        <div class="card shadow-sm border-warning mb-4">
+          <div class="card-header bg-warning text-dark font-bold py-2 d-flex justify-content-between align-items-center">
+            <span><i class="fas fa-clipboard"></i> Clipboard (Ruang Penampung Jadwal)</span>
+
+            {{-- Tombol Pemulihan Massal Clipboard (Disembunyikan default) --}}
+            <div id="clipboard-bulk-container" class="d-none">
+              <button class="btn btn-sm btn-dark fw-bold shadow-lg" data-bs-toggle="modal" data-bs-target="#bulkRestoreModal">
+                <i class="fas fa-reply-all me-1"></i> Pasang Terpilih (<span id="cb-selected-count">0</span> Data)
+              </button>
+            </div>
+          </div>
+          <div class="card-body pb-0 pt-3">
+            @foreach (session('jadwal_clipboard') as $index => $item)
+              <div class="alert alert-light-warning border d-flex justify-content-between align-items-center py-2 px-3 mb-2">
+                <div class="d-flex align-items-center">
+                  {{-- Checkbox Pemulihan Massal --}}
+                  <div class="me-3">
+                    <input class="form-check-input select-clipboard border-primary shadow-sm" type="checkbox" value="{{ $index }}" data-mapel="{{ $item['mapel_id'] }}"
+                      data-kelas="{{ $item['kelas_id'] }}" style="cursor: pointer; transform: scale(1.3);">
+                  </div>
+                  <span>
+                    <b class="text-dark">{{ \App\Models\Mapel::find($item['mapel_id'])->nama_mapel ?? 'Mapel' }}</b> <br>
+                    <small class="text-muted">{{ \App\Models\Guru::find($item['guru_id'])->nama_guru ?? 'Guru' }} (Kelas: {{ \App\Models\Kelas::find($item['kelas_id'])->nama_kelas ?? '' }})</small>
+                  </span>
+                </div>
+
+                {{-- Form Pemulihan Satuan --}}
+                <form action="{{ route('admin.jadwal.restoreFromClipboard') }}" method="POST" class="d-flex align-items-center m-0 form-restore-satuan">
+                  @csrf
+                  <input type="hidden" name="index" value="{{ $index }}">
+                  <select name="day" class="form-select form-select-sm mx-1" style="min-width: 100px;" required>
+                    @foreach ($days as $d)
+                      <option>{{ $d }}</option>
+                    @endforeach
+                  </select>
+                  <select name="time_slot_id" class="form-select form-select-sm mx-1" style="min-width: 120px;" required>
+                    @foreach ($slots as $s)
+                      <option value="{{ $s->id }}">Jam ke-{{ $s->slot_number }}</option>
+                    @endforeach
+                  </select>
+                  <button class="btn btn-sm btn-success fw-bold ms-2"><i class="fas fa-reply"></i> Pasang</button>
+                </form>
+              </div>
+            @endforeach
+          </div>
+        </div>
+      @endif
+
       <div class="card mb-4 shadow-sm">
         <div class="card-body py-3">
           <div class="row align-items-center">
@@ -69,7 +120,7 @@
                 'data' => $slots->where('slot_number', '<=', 10),
             ],
             'Siang' => [
-                'title' => 'Shift Siang (Slot 11 - 17)',
+                'title' => 'Shift Siang (Slot 11 - 18)',
                 'icon' => 'fas fa-cloud-sun text-info',
                 'data' => $slots->where('slot_number', '>', 10),
             ],
@@ -132,7 +183,7 @@
 
                         @foreach ($days as $day)
                           <td>
-                            @if ($day == 'Jumat' && (($slot->slot_number >= 7 && $slot->slot_number <= 10) || $slot->slot_number == 17))
+                            @if ($day == 'Jumat' && (($slot->slot_number >= 7 && $slot->slot_number <= 10) || $slot->slot_number >= 17))
                               <div class="text-center text-muted p-3 border rounded" style="background: repeating-linear-gradient(45deg, #f8f9fa, #f8f9fa 10px, #e9ecef 10px, #e9ecef 20px);">
                                 <i class="fas fa-ban mb-1 d-block text-secondary"></i> <small>KOSONG</small>
                               </div>
@@ -141,7 +192,7 @@
                                 @php $s = $jadwalMatrix[$slot->id][$day]; @endphp
 
                                 <div class="card mb-0 shadow-sm border position-relative">
-                                  {{-- CHECKBOX UNTUK BULK EDIT (Hanya tampil jika status bukan active) --}}
+                                  {{-- CHECKBOX UNTUK BULK EDIT --}}
                                   @if ($batch->status != 'active')
                                     <div class="position-absolute top-0 start-0 p-2">
                                       <input class="form-check-input select-jadwal border-primary" type="checkbox" value="{{ $s->id }}" data-guru="{{ $s->guru_id }}"
@@ -175,7 +226,7 @@
                                   </div>
                                 </div>
 
-                                {{-- MODAL PINDAH MANUAL (TETAP ADA) --}}
+                                {{-- MODAL PINDAH MANUAL --}}
                                 @if ($batch->status != 'active')
                                   <div class="modal fade text-left" id="editModal{{ $s->id }}" tabindex="-1" role="dialog" aria-hidden="true">
                                     <div class="modal-dialog modal-dialog-centered" role="document">
@@ -184,12 +235,14 @@
                                           <h5 class="modal-title white">Pindah Jadwal Manual</h5>
                                           <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close"><i data-feather="x"></i></button>
                                         </div>
-                                        <form action="{{ route('admin.jadwal.updateManual', $s->id) }}" method="POST">
-                                          @csrf
-                                          @method('PUT')
-                                          <div class="modal-body text-start">
-                                            <div class="alert alert-info">Memindahkan <b>{{ $s->mapel->nama_mapel }}</b> ({{ $s->guru->nama_guru }}) dari <b>{{ $s->day }} Jam
-                                                ke-{{ $s->slotJam->slot_number }}</b>.</div>
+
+                                        <div class="modal-body text-start">
+                                          <div class="alert alert-info">Memindahkan <b>{{ $s->mapel->nama_mapel }}</b> ({{ $s->guru->nama_guru }}) dari <b>{{ $s->day }} Jam
+                                              ke-{{ $s->slotJam->slot_number }}</b>.</div>
+
+                                          <form action="{{ route('admin.jadwal.updateManual', $s->id) }}" method="POST" id="form-pindah-{{ $s->id }}">
+                                            @csrf
+                                            @method('PUT')
                                             <div class="form-group">
                                               <label class="fw-bold">Pindah ke Hari:</label>
                                               <select name="day" class="form-select" required>
@@ -208,12 +261,20 @@
                                                 @endforeach
                                               </select>
                                             </div>
-                                          </div>
-                                          <div class="modal-footer">
+                                          </form>
+                                        </div>
+
+                                        <div class="modal-footer d-flex justify-content-between">
+                                          <form action="{{ route('admin.jadwal.moveToClipboard') }}" method="POST" class="m-0">
+                                            @csrf
+                                            <input type="hidden" name="jadwal_id" value="{{ $s->id }}">
+                                            <button type="submit" class="btn btn-danger"><i class="fas fa-clipboard"></i> Simpan ke Clipboard</button>
+                                          </form>
+                                          <div>
                                             <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Batal</button>
-                                            <button type="submit" class="btn btn-primary ml-1">Simpan Perubahan</button>
+                                            <button type="submit" form="form-pindah-{{ $s->id }}" class="btn btn-primary ml-1">Simpan</button>
                                           </div>
-                                        </form>
+                                        </div>
                                       </div>
                                     </div>
                                   </div>
@@ -296,14 +357,21 @@
         @endif
       @endforeach
 
-      {{-- TOMBOL FLOATING (MUNCUL JIKA ADA CHECKBOX TERCENTANG) --}}
-      <div id="bulk-edit-container" class="d-none position-fixed bottom-0 start-50 translate-middle-x mb-4 shadow-lg" style="z-index: 1050;">
+      {{-- TOMBOL FLOATING (UNTUK TABEL JADWAL) --}}
+      <div id="bulk-edit-container" class="d-none position-fixed bottom-0 start-50 translate-middle-x mb-4 shadow-lg" style="z-index: 1050; gap: 10px;">
         <button class="btn btn-warning fw-bold px-4 py-2 rounded-pill shadow-lg border border-dark" data-bs-toggle="modal" data-bs-target="#bulkMoveModal">
-          <i class="fas fa-arrows-alt me-1"></i> Pindah Jadwal Terpilih (<span id="selected-count">0</span> JP)
+          <i class="fas fa-arrows-alt me-1"></i> Pindah Manual (<span id="selected-count">0</span> JP)
         </button>
+        <form action="{{ route('admin.jadwal.moveToClipboardBulk') }}" method="POST" class="m-0">
+          @csrf
+          <input type="hidden" name="jadwal_ids" id="bulk-jadwal-ids-clipboard">
+          <button type="submit" class="btn btn-danger fw-bold px-4 py-2 rounded-pill shadow-lg border border-dark">
+            <i class="fas fa-clipboard"></i> Simpan ke Clipboard
+          </button>
+        </form>
       </div>
 
-      {{-- MODAL BULK MOVE (PINDAH MASSAL) --}}
+      {{-- MODAL BULK MOVE TABEL --}}
       <div class="modal fade text-left" id="bulkMoveModal" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
           <div class="modal-content">
@@ -337,13 +405,56 @@
                       </option>
                     @endforeach
                   </select>
-                  <small class="text-muted mt-1 d-block"><i class="fas fa-info-circle"></i> Sistem akan otomatis mengurutkan ke bawah. (Contoh: jika memindah 3 JP dan memilih mulai jam ke-4, otomatis
-                    akan mengisi jam 4, 5, dan 6).</small>
                 </div>
               </div>
               <div class="modal-footer">
                 <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Batal</button>
                 <button type="submit" class="btn btn-warning ml-1 fw-bold text-dark">Simpan Perubahan</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      {{-- MODAL BULK RESTORE CLIPBOARD --}}
+      <div class="modal fade text-left" id="bulkRestoreModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+          <div class="modal-content">
+            <div class="modal-header bg-dark">
+              <h5 class="modal-title text-white"><i class="fas fa-reply-all me-2"></i> Pasang Jadwal Massal</h5>
+              <button type="button" class="close text-white" data-bs-dismiss="modal" aria-label="Close"><i data-feather="x"></i></button>
+            </div>
+            <form action="{{ route('admin.jadwal.restoreFromClipboardBulk') }}" method="POST">
+              @csrf
+              <div class="modal-body text-start">
+                <input type="hidden" name="clipboard_indexes" id="cb-bulk-jadwal-ids">
+                <div class="alert alert-light-secondary text-dark border-secondary">
+                  Anda akan memulihkan data untuk <b><span id="cb-modal-count-text">0</span> Item</b> secara berurutan (Berdasarkan panjang JP).
+                </div>
+
+                <div class="form-group">
+                  <label class="fw-bold">Pasang ke Hari:</label>
+                  <select name="day" class="form-select" required>
+                    @foreach ($days as $d)
+                      <option value="{{ $d }}">{{ $d }}</option>
+                    @endforeach
+                  </select>
+                </div>
+
+                <div class="form-group mt-3">
+                  <label class="fw-bold">Pasang Mulai Jam Ke-:</label>
+                  <select name="start_time_slot_id" class="form-select" required>
+                    @foreach ($slots as $slotItem)
+                      <option value="{{ $slotItem->id }}">
+                        Jam ke-{{ $slotItem->slot_number }} ({{ substr($slotItem->start_time, 0, 5) }} - {{ substr($slotItem->end_time, 0, 5) }})
+                      </option>
+                    @endforeach
+                  </select>
+                </div>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-light-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="submit" class="btn btn-dark ml-1 fw-bold">Jalankan</button>
               </div>
             </form>
           </div>
@@ -357,7 +468,6 @@
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // --- NOTIFIKASI SWEETALERT ---
       const flashBerhasil = document.querySelector('.flash-data').getAttribute('data-berhasil');
       const flashGagal = document.querySelectorAll('.flash-data')[1].getAttribute('data-gagal');
 
@@ -378,7 +488,7 @@
         });
       }
 
-      // --- LOGIKA CHECKBOX BULK EDIT ---
+      // 1. LOGIKA CHECKBOX TABEL UTAMA
       let firstGuru = null;
       let firstMapel = null;
       const checkboxes = document.querySelectorAll('.select-jadwal');
@@ -386,6 +496,7 @@
       const countDisplay = document.getElementById('selected-count');
       const modalCountText = document.getElementById('modal-count-text');
       const hiddenInputIds = document.getElementById('bulk-jadwal-ids');
+      const hiddenClipboardIds = document.getElementById('bulk-jadwal-ids-clipboard');
 
       checkboxes.forEach(checkbox => {
         checkbox.addEventListener('change', function() {
@@ -393,7 +504,6 @@
           const count = checkedBoxes.length;
 
           if (count === 0) {
-            // Jika tidak ada yang dicentang, buka kunci semua checkbox
             firstGuru = null;
             firstMapel = null;
             checkboxes.forEach(cb => {
@@ -401,22 +511,19 @@
               cb.parentElement.parentElement.classList.remove('border-warning', 'bg-light-warning');
             });
             bulkContainer.classList.add('d-none');
+            bulkContainer.classList.remove('d-flex');
           } else {
-            // Jika ada yang dicentang, rekam data dari centang pertama
             if (count === 1) {
               firstGuru = checkedBoxes[0].getAttribute('data-guru');
               firstMapel = checkedBoxes[0].getAttribute('data-mapel');
             }
 
-            // Validasi: Kunci checkbox yang beda guru atau beda mapel
             checkboxes.forEach(cb => {
               const isMatch = cb.getAttribute('data-guru') === firstGuru && cb.getAttribute('data-mapel') === firstMapel;
-
               if (!isMatch) {
                 cb.disabled = true;
               } else {
                 cb.disabled = false;
-                // Kosmetik: Tambah warna jika dicentang
                 if (cb.checked) {
                   cb.parentElement.parentElement.classList.add('border-warning', 'bg-light-warning');
                 } else {
@@ -425,16 +532,73 @@
               }
             });
 
-            // Tampilkan tombol dan perbarui data ID
             countDisplay.innerText = count;
             modalCountText.innerText = count;
             bulkContainer.classList.remove('d-none');
+            bulkContainer.classList.add('d-flex');
 
             const ids = Array.from(checkedBoxes).map(cb => cb.value);
             hiddenInputIds.value = ids.join(',');
+            hiddenClipboardIds.value = ids.join(',');
           }
         });
       });
+
+      // 2. LOGIKA CHECKBOX CLIPBOARD
+      let cbFirstMapel = null;
+      let cbFirstKelas = null;
+      const cbCheckboxes = document.querySelectorAll('.select-clipboard');
+      const cbBulkContainer = document.getElementById('clipboard-bulk-container');
+      const cbCountDisplay = document.getElementById('cb-selected-count');
+      const cbModalCountText = document.getElementById('cb-modal-count-text');
+      const cbHiddenInputIds = document.getElementById('cb-bulk-jadwal-ids');
+      const formsSatuan = document.querySelectorAll('.form-restore-satuan');
+
+      cbCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          const checkedBoxes = document.querySelectorAll('.select-clipboard:checked');
+          const count = checkedBoxes.length;
+
+          if (count === 0) {
+            cbFirstMapel = null;
+            cbFirstKelas = null;
+            cbCheckboxes.forEach(cb => {
+              cb.disabled = false;
+              cb.parentElement.parentElement.parentElement.classList.remove('border-dark', 'bg-light');
+            });
+            formsSatuan.forEach(form => form.classList.remove('d-none')); // Tampilkan form satuan lagi
+            cbBulkContainer.classList.add('d-none');
+          } else {
+            if (count === 1) {
+              cbFirstMapel = checkedBoxes[0].getAttribute('data-mapel');
+              cbFirstKelas = checkedBoxes[0].getAttribute('data-kelas');
+            }
+
+            cbCheckboxes.forEach(cb => {
+              const isMatch = cb.getAttribute('data-mapel') === cbFirstMapel && cb.getAttribute('data-kelas') === cbFirstKelas;
+              if (!isMatch) {
+                cb.disabled = true;
+              } else {
+                cb.disabled = false;
+                if (cb.checked) {
+                  cb.parentElement.parentElement.parentElement.classList.add('border-dark', 'bg-light');
+                } else {
+                  cb.parentElement.parentElement.parentElement.classList.remove('border-dark', 'bg-light');
+                }
+              }
+            });
+
+            formsSatuan.forEach(form => form.classList.add('d-none')); // Sembunyikan form satuan agar rapi
+            cbCountDisplay.innerText = count;
+            cbModalCountText.innerText = count;
+            cbBulkContainer.classList.remove('d-none');
+
+            const ids = Array.from(checkedBoxes).map(cb => cb.value);
+            cbHiddenInputIds.value = ids.join(',');
+          }
+        });
+      });
+
     });
   </script>
 @endsection
