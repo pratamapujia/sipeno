@@ -11,14 +11,14 @@
     <div class="page-title">
       <div class="row">
         <div class="col-12 col-md-8 order-md-1 order-last">
-          <h3>Atur Ketersediaan Waktu Mengajar</h3>
+          <h3>Atur Waktu Berhalangan Mengajar</h3>
           <p class="text-subtitle text-muted">
-            <b>Centang</b> kotak pada jam di mana guru tersebut <b>BISA HADIR</b>.<br>
-            <span class="text-danger"><i class="fas fa-exclamation-triangle"></i> Kotak yang dibiarkan kosong akan dianggap sebagai waktu berhalangan.</span>
+            <b>Centang</b> kotak pada jam di mana guru tersebut <b>BERHALANGAN / TIDAK BISA HADIR</b>.<br>
+            <span class="text-primary"><i class="fas fa-info-circle"></i> Kotak yang dibiarkan kosong akan dianggap sebagai waktu luang (tersedia) untuk mengajar.</span>
           </p>
         </div>
         <div class="col-12 col-md-4 order-md-2 order-first text-md-end mb-3">
-          <a href="{{ route('admin.guruFree.rekap') }}" class="btn btn-secondary shadow-sm">
+          <a href="{{ route('admin.guruFree.rekap') }}" class="btn btn-primary shadow-sm">
             <i class="fas fa-chart-line"></i> Lihat Rekap Berhalangan
           </a>
         </div>
@@ -49,7 +49,7 @@
       </div>
 
       @if ($selectedTarget)
-        <div class="card shadow-sm">
+        <div class="card shadow-sm border-top border-danger border-3">
           <div class="card-content">
             <div class="card-body">
               <form action="{{ route('admin.guruFree.store') }}" method="POST">
@@ -57,12 +57,12 @@
                 <input type="hidden" name="target" value="{{ $selectedTarget }}">
 
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                  <h5 class="mb-0 text-success"><i class="fas fa-check-square me-2"></i> Jadwal Bisa Hadir</h5>
+                  <h5 class="mb-0 text-danger"><i class="fas fa-calendar-times me-2"></i> Jadwal Berhalangan</h5>
                   <div>
-                    <button type="button" class="btn btn-sm btn-outline-success me-2" onclick="checkAll(true)">
+                    <button type="button" class="btn btn-sm btn-outline-danger me-2" onclick="checkAll(true)">
                       <i class="fas fa-check-double"></i> Centang Semua
                     </button>
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="checkAll(false)">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" onclick="checkAll(false)">
                       <i class="fas fa-eraser"></i> Kosongkan Semua
                     </button>
                   </div>
@@ -77,7 +77,7 @@
                           <th class="align-middle text-center">
                             {{ $day }}<br>
                             {{-- Checkbox Master Per Hari --}}
-                            <div class="form-check form-check-sm d-flex justify-content-center mt-2 mb-0" title="Centang semua jam di hari {{ $day }}">
+                            <div class="form-check form-check-sm d-flex justify-content-center mt-2 mb-0" title="Centang berhalangan sehari penuh pada hari {{ $day }}">
                               <input class="form-check-input check-all-day border-secondary" type="checkbox" data-day="{{ $day }}" style="cursor: pointer; transform: scale(1.2);">
                             </div>
                           </th>
@@ -102,19 +102,11 @@
                               @else
                                 @php
                                   $key = "{$day}_{$slot->id}";
-                                  $isChecked = false;
-
-                                  if ($isInitialized) {
-                                      $isChecked = isset($tersedia[$key]);
-                                  } else {
-                                      $isChecked = false;
-                                  }
                                 @endphp
 
                                 <div class="form-check form-check-sm d-flex justify-content-center">
-                                  {{-- Tambahkan class 'day-NamaHari' agar mudah dijangkau oleh JavaScript --}}
-                                  <input class="form-check-input check-jadwal day-{{ $day }} border-success border-2" type="checkbox" style="transform: scale(1.5); cursor: pointer;"
-                                    name="available[{{ $key }}]" value="1" {{ $isChecked ? 'checked' : '' }}>
+                                  <input class="form-check-input check-jadwal day-{{ $day }} border-danger border-2" type="checkbox" style="transform: scale(1.5); cursor: pointer;"
+                                    name="unassigned[{{ $key }}]" value="1" {{ isset($tidakTersedia[$key]) ? 'checked' : '' }}>
                                 </div>
                               @endif
                             </td>
@@ -126,8 +118,8 @@
                 </div>
 
                 <div class="d-flex justify-content-end mt-4">
-                  <button type="submit" class="btn btn-success icon icon-left fw-bold shadow-sm px-4">
-                    <i class="fas fa-save"></i> Simpan Ketersediaan
+                  <button type="submit" class="btn btn-danger icon icon-left fw-bold shadow-sm px-4">
+                    <i class="fas fa-save"></i> Simpan Batasan Waktu
                   </button>
                 </div>
               </form>

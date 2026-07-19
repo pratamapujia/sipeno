@@ -12,7 +12,6 @@ class GuruFreeController extends Controller
     // Tampilkan grid ketersediaan guru
     public function index(Request $request)
     {
-        // 1. Tarik data plotting untuk kombinasi Guru dan Kelas
         $guruMapels = GuruMapel::with(['guru', 'kelas', 'mapel'])
             ->orderBy('guru_id')
             ->get()
@@ -38,25 +37,19 @@ class GuruFreeController extends Controller
             $selectedKelasId = $parts[1] ?? null;
         }
 
-        $tersedia = [];
-        $isInitialized = false;
-
+        // Data yang diambil dari DB HANYA data yang BERHALANGAN (is_available = false)
+        $tidakTersedia = [];
         if ($selectedGuruId && $selectedKelasId) {
-            $existingData = GuruFree::where('guru_id', $selectedGuruId)
+            $tidakTersedia = GuruFree::where('guru_id', $selectedGuruId)
                 ->where('kelas_id', $selectedKelasId)
-                ->get();
-
-            // Cek apakah guru ini sudah pernah di-save jadwalnya (diinisialisasi)
-            $isInitialized = $existingData->isNotEmpty();
-
-            // Ambil data khusus yang BISA HADIR (is_available = true) untuk dicentang
-            $tersedia = $existingData->where('is_available', true)
+                ->where('is_available', false)
+                ->get()
                 ->mapWithKeys(function ($item) {
                     return ["{$item->day}_{$item->time_slot_id}" => true];
                 })->toArray();
         }
 
-        return view('admin.guruFree.index', compact('guruMapels', 'slot', 'hari', 'tersedia', 'selectedTarget', 'isInitialized'));
+        return view('admin.guruFree.index', compact('guruMapels', 'slot', 'hari', 'tidakTersedia', 'selectedTarget'));
     }
 
     // Simpan Perubahan Ketersediaan Guru
@@ -75,41 +68,28 @@ class GuruFreeController extends Controller
         // 1. Bersihkan semua riwayat jadwal untuk Guru & Kelas ini
         GuruFree::where('guru_id', $guruId)->where('kelas_id', $kelasId)->delete();
 
-        // 2. Ambil data kotak yang DICENTANG (Bisa Hadir)
-        $availableReq = $request->input('available', []);
-
-        $hariArr = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
-        $slotDb = SlotJam::where('is_istirahat', false)->get();
-        $dataInsert = [];
-
-        // 3. Simpan KEDUA status ke database secara eksplisit
-        foreach ($hariArr as $hari) {
-            foreach ($slotDb as $s) {
-                $key = "{$hari}_{$s->id}";
-
-                // Jika key ada di request = dicentang = true (Hadir)
-                // Jika tidak ada = dibiarkan kosong = false (Berhalangan)
-                $isAvail = isset($availableReq[$key]);
-
+        // 2. Jika ada kotak yang DICENTANG (artinya BERHALANGAN)
+        if ($request->has('unassigned')) {
+            $dataInsert = [];
+            foreach ($request->unassigned as $key => $value) {
+                [$hari, $slotId] = explode('_', $key);
                 $dataInsert[] = [
                     'guru_id' => $guruId,
                     'kelas_id' => $kelasId,
                     'day' => $hari,
-                    'time_slot_id' => $s->id,
-                    'is_available' => $isAvail,
+                    'time_slot_id' => $slotId,
+                    'is_available' => false, // Simpan sebagai tidak tersedia
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
             }
-        }
 
-        // 4. Lakukan Insert Massal
-        if (!empty($dataInsert)) {
+            // Lakukan Insert Massal
             GuruFree::insert($dataInsert);
         }
 
         return redirect()->route('admin.guruFree.index', ['target' => $request->target])
-            ->with('success', 'Ketersediaan waktu mengajar berhasil diperbarui.');
+            ->with('success', 'Waktu berhalangan mengajar berhasil diperbarui.');
     }
 
     public function rekap()
@@ -117,7 +97,6 @@ class GuruFreeController extends Controller
         $slot = SlotJam::orderBy('slot_number', 'asc')->get();
         $hari = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
 
-        // Rekap HANYA memunculkan yang is_available = false (Berhalangan)
         $tidakTersedia = GuruFree::with(['guru', 'kelas'])->where('is_available', false)->get();
 
         $rekapData = [];
