@@ -36,7 +36,7 @@
                   <div class="col-12">
                     <div class="form-group">
                       <label for="guru_id" class="fw-bold mb-1">Pilih Guru</label>
-                      <select name="guru_id" id="guru_id" class="form-select @error('guru_id') is-invalid @enderror" required>
+                      <select name="guru_id" id="guru_id" class="choices form-select @error('guru_id') is-invalid @enderror" required>
                         <option value="">-- Pilih Guru --</option>
                         @foreach ($guru as $guru)
                           <option value="{{ $guru->id }}" {{ old('guru_id') == $guru->id ? 'selected' : '' }}>
