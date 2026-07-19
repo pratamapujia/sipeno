@@ -16,21 +16,17 @@ use Illuminate\Support\Facades\DB;
 class GeneticScheduleService
 {
   private $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
-  private $popSize = 100;
+  private $popSize = 50;
   private $maxGenerations = 5000;
 
   public function generate($academicYearId)
   {
-    $allActiveSlots = SlotJam::where('is_istirahat', false)->get();
+    $allActiveSlots = SlotJam::where('is_istirahat', false)->orderBy('slot_number', 'asc')->get();
     if ($allActiveSlots->isEmpty()) {
       throw new \Exception('Data slot jam tidak ditemukan atau kosong.');
     }
 
-    // --- STRATEGI DUA KOLAM (TWO POOLS) ---
-    // 1. Kolam Normal (Senin - Kamis): Menggunakan semua slot 1 s/d 17
     $slotsNormal = $allActiveSlots->pluck('id')->toArray();
-
-    // 2. Kolam Jumat: Hanya slot 1-6 (Pagi) DAN 11-16 (Siang). Slot 7-10 dibuang dari pengacakan Jumat.
     $slotsJumat = $allActiveSlots->filter(function ($slot) {
       return $slot->slot_number <= 6 || ($slot->slot_number >= 11 && $slot->slot_number <= 16);
     })->pluck('id')->toArray();
@@ -40,17 +36,36 @@ class GeneticScheduleService
       throw new \Exception('Data plotting (target mengajar) tidak ditemukan atau kosong.');
     }
 
-    $targetMengajar = [];
+    $targetGroupsAssoc = [];
     foreach ($guruMapel as $gm) {
-      $bebanJam = $gm['mapel']['beban_jam'] ?? 2;
-      for ($i = 0; $i < $bebanJam; $i++) {
-        $targetMengajar[] = [
-          'guru_id'   => $gm['guru_id'],
-          'mapel_id'  => $gm['mapel_id'],
+      $tipeMapel = $gm['mapel']['type'] ?? 'teori';
+
+      if ($tipeMapel === 'praktikum') {
+        $key = 'PRAKTIKUM_' . $gm['kelas_id'] . '_' . $gm['mapel_id'];
+      } else {
+        $key = 'TEORI_' . $gm['kelas_id'] . '_' . $gm['mapel_id'] . '_' . $gm['guru_id'];
+      }
+
+      if (!isset($targetGroupsAssoc[$key])) {
+        $targetGroupsAssoc[$key] = [
           'kelas_id'  => $gm['kelas_id'],
+          'mapel_id'  => $gm['mapel_id'],
+          'beban_jam' => $gm['mapel']['beban_jam'] ?? 2,
+          'gurus'     => []
         ];
       }
+      if (!in_array($gm['guru_id'], $targetGroupsAssoc[$key]['gurus'])) {
+        $targetGroupsAssoc[$key]['gurus'][] = $gm['guru_id'];
+      }
     }
+    $targetGroups = array_values($targetGroupsAssoc);
+
+    // Memaksa mesin memprioritaskan mapel ber-JP besar (misal 6 JP) di awal 
+    // agar mendapat slot berurutan sebelum sisa slot diisi mapel ber-JP kecil.
+    usort($targetGroups, function ($a, $b) {
+      return $b['beban_jam'] <=> $a['beban_jam'];
+    });
+    // ---------------------------------------------------------
 
     $availabilities = GuruFree::where('is_available', false)
       ->get()
@@ -66,8 +81,7 @@ class GeneticScheduleService
 
     $populasi = [];
     for ($i = 0; $i < $this->popSize; $i++) {
-      // Melempar dua kolam ke fungsi kromosom
-      $populasi[] = $this->generateKromosomAcak($targetMengajar, $slotsNormal, $slotsJumat, $guruPiket);
+      $populasi[] = $this->generateKromosomAcak($targetGroups, $slotsNormal, $slotsJumat, $guruPiket);
     }
 
     $generasi = 0;
@@ -92,7 +106,6 @@ class GeneticScheduleService
         $p2 = $populasi[rand(0, 9)]['jadwal'];
 
         $anak = $this->crossover($p1, $p2);
-        // Melempar dua kolam ke fungsi mutasi
         $anak = $this->mutasi($anak, $slotsNormal, $slotsJumat, $guruPiket);
 
         $populasiBaru[] = ['jadwal' => $anak, 'fitness' => -9999];
@@ -129,40 +142,76 @@ class GeneticScheduleService
     });
 
     if ($solusiTerbaik['fitness'] == 0) {
-      return [
-        'status' => 'perfect',
-        'batch' => $batch,
-        'conflicts' => []
-      ];
+      return ['status' => 'perfect', 'batch' => $batch, 'conflicts' => []];
     } else {
-      return [
-        'status' => 'need_revision',
-        'batch' => $batch,
-        'conflicts' => $detailKonflik
-      ];
+      return ['status' => 'need_revision', 'batch' => $batch, 'conflicts' => $detailKonflik];
     }
   }
 
-  // --- PEMBARUAN: Memilih slot berdasarkan Hari ---
-  private function generateKromosomAcak($targetMengajar, $slotsNormal, $slotsJumat, $guruPiket)
+  // --- PEMBARUAN: GENERATE BERBASIS BLOK JP & TIM ---
+  private function generateKromosomAcak($targetGroups, $slotsNormal, $slotsJumat, $guruPiket)
   {
     $jadwal = [];
-    foreach ($targetMengajar as $target) {
+    foreach ($targetGroups as $group) {
       $hariAcak = $this->days[array_rand($this->days)];
 
       $attempts = 0;
-      while (isset($guruPiket[$target['guru_id']]) && in_array($hariAcak, $guruPiket[$target['guru_id']]) && $attempts < 10) {
-        $hariAcak = $this->days[array_rand($this->days)];
-        $attempts++;
+      $isPiket = true;
+      while ($isPiket && $attempts < 10) {
+        $isPiket = false;
+        foreach ($group['gurus'] as $gId) {
+          if (isset($guruPiket[$gId]) && in_array($hariAcak, $guruPiket[$gId])) {
+            $isPiket = true;
+            break;
+          }
+        }
+        if ($isPiket) {
+          $hariAcak = $this->days[array_rand($this->days)];
+          $attempts++;
+        }
       }
 
-      // Memilih kolam khusus jika hari Jumat
-      $slotPool = ($hariAcak === 'Jumat') ? $slotsJumat : $slotsNormal;
+      // KUNCI PERBAIKAN: Memecah kolam menjadi Shift Pagi dan Siang agar tidak menabrak batas
+      $validPools = [];
+      $b = $group['beban_jam'];
 
-      $jadwal[] = array_merge($target, [
-        'day'          => $hariAcak,
-        'time_slot_id' => $slotPool[array_rand($slotPool)]
-      ]);
+      if ($hariAcak === 'Jumat') {
+        $pagi = array_slice($slotsJumat, 0, 6); // Array Slot 1-6
+        $siang = array_slice($slotsJumat, 6, 6); // Array Slot 11-16
+      } else {
+        $pagi = array_slice($slotsNormal, 0, 10); // Array Slot 1-10
+        $siang = array_slice($slotsNormal, 10, 7); // Array Slot 11-17
+      }
+
+      // Hanya gunakan Shift yang sisa kapasitasnya cukup untuk menampung JP mapel ini
+      if (count($pagi) >= $b) $validPools[] = $pagi;
+      if (count($siang) >= $b) $validPools[] = $siang;
+
+      if (empty($validPools)) {
+        // Fallback darurat (jika JP > 10, mesin akan terpaksa menggabungkannya)
+        $slotPool = ($hariAcak === 'Jumat') ? $slotsJumat : $slotsNormal;
+      } else {
+        // Pilih secara acak mau dimasukkan murni ke Pagi atau murni ke Siang
+        $slotPool = $validPools[array_rand($validPools)];
+      }
+
+      $maxIndex = count($slotPool) - $b;
+      if ($maxIndex < 0) $maxIndex = 0;
+      $startIndex = rand(0, $maxIndex);
+
+      for ($i = 0; $i < $b; $i++) {
+        $assignedSlotId = $slotPool[$startIndex + $i] ?? $slotPool[array_rand($slotPool)];
+
+        foreach ($group['gurus'] as $guruId) {
+          $jadwal[] = [
+            'guru_id'      => $guruId,
+            'mapel_id'     => $group['mapel_id'],
+            'kelas_id'     => $group['kelas_id'],
+            'day'          => $hariAcak,
+            'time_slot_id' => $assignedSlotId
+          ];
+        }
+      }
     }
     return ['jadwal' => $jadwal, 'fitness' => -9999];
   }
@@ -178,7 +227,7 @@ class GeneticScheduleService
       $checkGuru = [];
       $checkKelas = [];
       $kelasJadwalHari = [];
-      $jadwalTeamTeaching = []; // Penampung jadwal praktikum untuk sinkronisasi
+      $jadwalTeamTeaching = [];
 
       foreach ($individu['jadwal'] as $g) {
         $tipeMapel = $mapelTypes[$g['mapel_id']] ?? 'teori';
@@ -188,15 +237,14 @@ class GeneticScheduleService
         $keyGuru = "{$g['day']}_{$g['time_slot_id']}_{$g['guru_id']}";
         $keyKelas = "{$g['day']}_{$g['time_slot_id']}_{$g['kelas_id']}";
 
-        // Cek Bentrok Guru
         if (isset($checkGuru[$keyGuru])) $penalty -= 500;
         $checkGuru[$keyGuru] = true;
 
-        // Cek Bentrok Kelas (Pengecualian untuk Team Teaching Praktikum)
+        // Pengecualian Bentrok Kelas HANYA untuk Mapel Praktikum yang sama
         if (isset($checkKelas[$keyKelas])) {
           $existing = $checkKelas[$keyKelas];
           if ($existing['mapel_id'] == $g['mapel_id'] && $existing['tipe'] === 'praktikum' && $tipeMapel === 'praktikum' && $existing['guru_id'] != $g['guru_id']) {
-            // Diizinkan (Team Teaching), jangan beri penalti
+            // Aman, diizinkan (Team Teaching Praktikum)
           } else {
             $penalty -= 500;
           }
@@ -210,7 +258,7 @@ class GeneticScheduleService
 
         if ($isIstirahat) $penalty -= 500;
 
-        // Aturan Shift
+        // Aturan Khusus Jumat & Shift 
         if ($g['day'] === 'Jumat') {
           if (($nomorJam > 6 && $nomorJam <= 10) || $nomorJam > 16) $penalty -= 1000;
           if ($tipeMapel === 'teori' && $nomorJam > 6) $penalty -= 500;
@@ -222,10 +270,7 @@ class GeneticScheduleService
           $penalty -= 1000;
         }
 
-        $kelasJadwalHari[$g['kelas_id']][$g['day']][] = [
-          'slot_number' => $nomorJam,
-          'type'        => $tipeMapel
-        ];
+        $kelasJadwalHari[$g['kelas_id']][$g['day']][] = ['slot_number' => $nomorJam, 'type' => $tipeMapel];
 
         if (isset($availabilities[$g['guru_id']])) {
           foreach ($availabilities[$g['guru_id']] as $av) {
@@ -235,15 +280,13 @@ class GeneticScheduleService
           }
         }
 
-        // Kumpulkan data praktikum untuk sinkronisasi Team Teaching
         if ($tipeMapel === 'praktikum') {
           $keyTeam = "{$g['kelas_id']}_{$g['mapel_id']}";
           $jadwalTeamTeaching[$keyTeam][] = $g;
         }
       }
 
-      // --- SINKRONISASI TEAM TEACHING ---
-      // Memaksa mesin agar 2 guru di mapel yang sama mengajar di slot yang sama persis
+      // Sinkronisasi Mutlak Co-Teaching Praktikum
       foreach ($jadwalTeamTeaching as $key => $jadwals) {
         $guruGroups = [];
         foreach ($jadwals as $jwd) {
@@ -258,13 +301,10 @@ class GeneticScheduleService
               $currentSlots[] = $s['day'] . '_' . $s['time_slot_id'];
             }
             sort($currentSlots);
-
             if ($baseSlots === null) {
               $baseSlots = $currentSlots;
             } else {
-              if ($baseSlots !== $currentSlots) {
-                $penalty -= 1000; // Penalti mutlak jika jadwal mereka terpisah
-              }
+              if ($baseSlots !== $currentSlots) $penalty -= 2000;
             }
           }
         }
@@ -282,13 +322,11 @@ class GeneticScheduleService
         }
       }
 
+      // Validasi JP Berurutan Mutlak
       $kelompokBlock = [];
       foreach ($individu['jadwal'] as $g) {
         $keyBlok = "{$g['guru_id']}_{$g['mapel_id']}_{$g['kelas_id']}";
-        $kelompokBlock[$keyBlok][] = [
-          'day' => $g['day'],
-          'slot_number' => $slotDetails[$g['time_slot_id']]['slot_number'] ?? 1,
-        ];
+        $kelompokBlock[$keyBlok][] = ['day' => $g['day'], 'slot_number' => $slotDetails[$g['time_slot_id']]['slot_number'] ?? 1];
       }
 
       foreach ($kelompokBlock as $key => $jadwals) {
@@ -296,7 +334,7 @@ class GeneticScheduleService
         $hariPertama = $jadwals[0]['day'];
         $slotNumbers = [];
         foreach ($jadwals as $jwd) {
-          if ($jwd['day'] !== $hariPertama) $penalty -= 200;
+          if ($jwd['day'] !== $hariPertama) $penalty -= 1000;
           $slotNumbers[] = $jwd['slot_number'];
         }
         sort($slotNumbers);
@@ -304,14 +342,13 @@ class GeneticScheduleService
           $idx1 = array_search($slotNumbers[$i], $activeSlots);
           $idx2 = array_search($slotNumbers[$i + 1], $activeSlots);
           if ($idx2 !== false && $idx1 !== false) {
-            if (($idx2 - $idx1) !== 1) $penalty -= 200;
+            if (($idx2 - $idx1) !== 1) $penalty -= 1000;
           }
         }
       }
 
       $individu['fitness'] = $penalty;
     }
-
     return $populasi;
   }
 
@@ -322,23 +359,76 @@ class GeneticScheduleService
     return array_merge(array_slice($j1, 0, $cut), array_slice($j2, $cut));
   }
 
-  // --- PEMBARUAN: Memilih slot mutasi berdasarkan Hari ---
   private function mutasi($jadwal, $slotsNormal, $slotsJumat, $guruPiket)
   {
     if (rand(1, 100) <= 20) {
-      $index = array_rand($jadwal);
+      $randomIndex = array_rand($jadwal);
+      $targetKelas = $jadwal[$randomIndex]['kelas_id'];
+      $targetMapel = $jadwal[$randomIndex]['mapel_id'];
+
+      $blockIndices = [];
+      $gurus = [];
+      foreach ($jadwal as $idx => $j) {
+        if ($j['kelas_id'] == $targetKelas && $j['mapel_id'] == $targetMapel) {
+          $blockIndices[] = $idx;
+          $gurus[$j['guru_id']] = true;
+        }
+      }
+
+      $b = count($blockIndices) / count($gurus); // Dapatkan Beban JP
       $hariMutasi = $this->days[array_rand($this->days)];
 
       $attempts = 0;
-      while (isset($guruPiket[$jadwal[$index]['guru_id']]) && in_array($hariMutasi, $guruPiket[$jadwal[$index]['guru_id']]) && $attempts < 10) {
-        $hariMutasi = $this->days[array_rand($this->days)];
-        $attempts++;
+      $isPiket = true;
+      while ($isPiket && $attempts < 10) {
+        $isPiket = false;
+        foreach (array_keys($gurus) as $gId) {
+          if (isset($guruPiket[$gId]) && in_array($hariMutasi, $guruPiket[$gId])) {
+            $isPiket = true;
+            break;
+          }
+        }
+        if ($isPiket) {
+          $hariMutasi = $this->days[array_rand($this->days)];
+          $attempts++;
+        }
       }
 
-      $slotPool = ($hariMutasi === 'Jumat') ? $slotsJumat : $slotsNormal;
+      // KUNCI PERBAIKAN KOLAM MUTASI
+      $validPools = [];
+      if ($hariMutasi === 'Jumat') {
+        $pagi = array_slice($slotsJumat, 0, 6);
+        $siang = array_slice($slotsJumat, 6, 6);
+      } else {
+        $pagi = array_slice($slotsNormal, 0, 10);
+        $siang = array_slice($slotsNormal, 10, 7);
+      }
 
-      $jadwal[$index]['day'] = $hariMutasi;
-      $jadwal[$index]['time_slot_id'] = $slotPool[array_rand($slotPool)];
+      if (count($pagi) >= $b) $validPools[] = $pagi;
+      if (count($siang) >= $b) $validPools[] = $siang;
+
+      if (empty($validPools)) {
+        $slotPool = ($hariMutasi === 'Jumat') ? $slotsJumat : $slotsNormal;
+      } else {
+        $slotPool = $validPools[array_rand($validPools)];
+      }
+
+      $maxIndex = count($slotPool) - $b;
+      if ($maxIndex < 0) $maxIndex = 0;
+      $startIndex = rand(0, $maxIndex);
+
+      $guruAssignments = [];
+      foreach ($blockIndices as $idx) {
+        $guruAssignments[$jadwal[$idx]['guru_id']][] = $idx;
+      }
+
+      foreach ($guruAssignments as $gid => $indices) {
+        for ($i = 0; $i < count($indices); $i++) {
+          $idx = $indices[$i];
+          $jadwal[$idx]['day'] = $hariMutasi;
+          $jadwal[$idx]['time_slot_id'] = $slotPool[$startIndex + $i] ?? $slotPool[array_rand($slotPool)];
+        }
+      }
     }
     return $jadwal;
   }
@@ -375,6 +465,7 @@ class GeneticScheduleService
 
       if (isset($checkKelas["{$hari}_{$jamKe}_{$g['kelas_id']}"])) {
         $existing = $checkKelas["{$hari}_{$jamKe}_{$g['kelas_id']}"];
+        // Pengecualian Diagnosa HANYA untuk Praktikum
         if ($existing['mapel_id'] == $g['mapel_id'] && $existing['tipe'] === 'praktikum' && $tipeMapel === 'praktikum' && $existing['guru_id'] != $g['guru_id']) {
           // Team teaching diizinkan
         } else {
@@ -424,7 +515,6 @@ class GeneticScheduleService
       }
     }
 
-    // Pesan error jika Team Teaching terpencar
     foreach ($jadwalTeamTeaching as $key => $jadwals) {
       $guruGroups = [];
       foreach ($jadwals as $jwd) {

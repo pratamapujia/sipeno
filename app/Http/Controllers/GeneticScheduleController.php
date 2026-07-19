@@ -55,8 +55,8 @@ class GeneticScheduleController extends Controller
 
             // Skenario B: Jadwal berhasil disimpan, tapi ada aturan shift/jumat yang dilanggar
             return redirect()->route('admin.jadwal.index')->with('success', 'Jadwal berhasil dibuat sebagai DRAFT')->with('warning_banyak', $result['conflicts']);
-        } catch (\Exception $e) {
-            return redirect()->route('admin.jadwal.index')->with('error',  'GAGAL Fatal: ', $e->getMessage());
+        } catch (\Throwable $e) {
+            return redirect()->route('admin.jadwal.index')->with('error', 'GAGAL Fatal: ' . $e->getMessage() . ' (File: ' . basename($e->getFile()) . ' Baris: ' . $e->getLine() . ')');
         }
     }
 
@@ -100,12 +100,30 @@ class GeneticScheduleController extends Controller
             ->get();
 
         $jadwalMatrix = [];
+        $guruTracker = []; // Penampung nama guru terpisah
+
         foreach ($schedules as $s) {
-            if (isset($jadwalMatrix[$s->time_slot_id][$s->day])) {
-                // Trik memori: Jika sudah ada jadwal di kotak ini, gabungkan nama gurunya!
-                $jadwalMatrix[$s->time_slot_id][$s->day]->guru->nama_guru .= ' & ' . $s->guru->nama_guru;
+            $slot = $s->time_slot_id;
+            $hari = $s->day;
+            $namaGuru = $s->guru->nama_guru;
+
+            if (isset($jadwalMatrix[$slot][$hari])) {
+                // Cek apakah nama guru belum ada di dalam tracker jam tersebut
+                if (!in_array($namaGuru, $guruTracker[$slot][$hari])) {
+                    $guruTracker[$slot][$hari][] = $namaGuru;
+
+                    $existingSchedule = $jadwalMatrix[$slot][$hari];
+                    $clonedGuru = clone $existingSchedule->guru;
+                    $clonedGuru->nama_guru = implode(' & ', $guruTracker[$slot][$hari]);
+                    $existingSchedule->setRelation('guru', $clonedGuru);
+                }
             } else {
-                $jadwalMatrix[$s->time_slot_id][$s->day] = $s;
+                // Inisialisasi awal saat jadwal pertama kali masuk kotak
+                $guruTracker[$slot][$hari] = [$namaGuru];
+
+                $clonedGuru = clone $s->guru;
+                $s->setRelation('guru', $clonedGuru);
+                $jadwalMatrix[$slot][$hari] = $s;
             }
         }
 
@@ -127,11 +145,28 @@ class GeneticScheduleController extends Controller
             ->get();
 
         $jadwalMatrix = [];
+        $guruTracker = [];
+
         foreach ($schedules as $s) {
-            if (isset($jadwalMatrix[$s->time_slot_id][$s->day])) {
-                $jadwalMatrix[$s->time_slot_id][$s->day]->guru->nama_guru .= ' & ' . $s->guru->nama_guru;
+            $slot = $s->time_slot_id;
+            $hari = $s->day;
+            $namaGuru = $s->guru->nama_guru;
+
+            if (isset($jadwalMatrix[$slot][$hari])) {
+                if (!in_array($namaGuru, $guruTracker[$slot][$hari])) {
+                    $guruTracker[$slot][$hari][] = $namaGuru;
+
+                    $existingSchedule = $jadwalMatrix[$slot][$hari];
+                    $clonedGuru = clone $existingSchedule->guru;
+                    $clonedGuru->nama_guru = implode(' & ', $guruTracker[$slot][$hari]);
+                    $existingSchedule->setRelation('guru', $clonedGuru);
+                }
             } else {
-                $jadwalMatrix[$s->time_slot_id][$s->day] = $s;
+                $guruTracker[$slot][$hari] = [$namaGuru];
+
+                $clonedGuru = clone $s->guru;
+                $s->setRelation('guru', $clonedGuru);
+                $jadwalMatrix[$slot][$hari] = $s;
             }
         }
 
@@ -155,12 +190,30 @@ class GeneticScheduleController extends Controller
         $kelasMatrix = [];
         foreach ($kelasList as $kelas) {
             $schedulesForKelas = $allSchedules->get($kelas->id) ?? collect();
+
             $matrix = [];
+            $guruTracker = []; // Pastikan tracker direset untuk setiap kelas
+
             foreach ($schedulesForKelas as $s) {
-                if (isset($matrix[$s->time_slot_id][$s->day])) {
-                    $matrix[$s->time_slot_id][$s->day]->guru->nama_guru .= ' & ' . $s->guru->nama_guru;
+                $slot = $s->time_slot_id;
+                $hari = $s->day;
+                $namaGuru = $s->guru->nama_guru;
+
+                if (isset($matrix[$slot][$hari])) {
+                    if (!in_array($namaGuru, $guruTracker[$slot][$hari])) {
+                        $guruTracker[$slot][$hari][] = $namaGuru;
+
+                        $existingSchedule = $matrix[$slot][$hari];
+                        $clonedGuru = clone $existingSchedule->guru;
+                        $clonedGuru->nama_guru = implode(' & ', $guruTracker[$slot][$hari]);
+                        $existingSchedule->setRelation('guru', $clonedGuru);
+                    }
                 } else {
-                    $matrix[$s->time_slot_id][$s->day] = $s;
+                    $guruTracker[$slot][$hari] = [$namaGuru];
+
+                    $clonedGuru = clone $s->guru;
+                    $s->setRelation('guru', $clonedGuru);
+                    $matrix[$slot][$hari] = $s;
                 }
             }
             $kelasMatrix[$kelas->id] = $matrix;

@@ -34,7 +34,7 @@ return new class extends Migration
             $table->timestamps();
 
             // PENTING: Index Unik untuk mencegah bentrok data di level database (Double Protection)
-            $table->unique(['schedule_batch_id', 'day', 'time_slot_id', 'kelas_id'], 'unique_class_schedule');
+            // $table->unique(['schedule_batch_id', 'day', 'time_slot_id', 'kelas_id'], 'unique_class_schedule');
             $table->unique(['schedule_batch_id', 'day', 'time_slot_id', 'guru_id'], 'unique_teacher_schedule');
         });
     }
