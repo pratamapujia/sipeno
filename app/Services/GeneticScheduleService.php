@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 class GeneticScheduleService
 {
   private $days = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'];
-  private $popSize = 100;
+  private $popSize = 50;
   private $maxGenerations = 5000;
 
   public function generate($academicYearId)
@@ -180,7 +180,7 @@ class GeneticScheduleService
         $siang = array_slice($slotsJumat, 6, 6); // Array Slot 11-16
       } else {
         $pagi = array_slice($slotsNormal, 0, 10); // Array Slot 1-10
-        $siang = array_slice($slotsNormal, 10, 7); // Array Slot 11-17
+        $siang = array_slice($slotsNormal, 10, 8); // Array Slot 11-18
       }
 
       // Hanya gunakan Shift yang sisa kapasitasnya cukup untuk menampung JP mapel ini
@@ -319,7 +319,7 @@ class GeneticScheduleService
         $siang = array_slice($slotsJumat, 6, 6);
       } else {
         $pagi = array_slice($slotsNormal, 0, 10);
-        $siang = array_slice($slotsNormal, 10, 7);
+        $siang = array_slice($slotsNormal, 10, 8);
       }
 
       if (count($pagi) >= $b) $validPools[] = $pagi;
